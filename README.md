@@ -1,0 +1,2 @@
+# Airbnb-Backend
+This project consists in the design and implementation of the backend for a house rental company like Airbnb using Microsoft Azure. The project is done on behalf of the Cloud Computing Systems course.
