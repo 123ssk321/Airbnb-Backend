@@ -3,13 +3,18 @@ package server.service;
 import java.util.*;
 
 import data.dto.House;
+import data.dto.Question;
+import data.dto.Reply;
 import data.dto.User;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
 @Path(RestHouses.PATH)
 public interface RestHouses {
-    static final String PATH="/house";
+    static final String PATH = "/house";
+    static final String LOCATION = "location";
+    static final String USERID = "userId";
+
     /**
      * Creates a new house.
      *
@@ -71,4 +76,52 @@ public interface RestHouses {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     List<House> listUserHouses(@QueryParam("userId") String userId);
+
+    /**
+     * Creates a new question for a given house.
+     *
+     * @param houseId the ID of the house.
+     * @param question Question to be created.
+     * @return 200 the questionId.
+     *         404 if the house id does not exist.
+     *         400 otherwise.
+     */
+    @POST
+    @Path("/{houseId}/question")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    String createQuestion(@PathParam("houseId") String houseId, Question question);
+
+    /**
+     * Creates a reply for a question of a given house.
+     *
+     * @param houseId the ID of the house.
+     * @param questionId the ID of the question.
+     * @param reply the Reply to be created.
+     * @return 200 the reply was created.
+     *         403 if the author of the reply is not the owner of the house.
+     *         404 if the houseId does not exist or the questionId does not exist.
+     *         400 otherwise.
+     */
+    @POST
+    @Path("/{houseId}/question/{questionId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    void createReply(@PathParam("houseId") String houseId, @PathParam("questionId") String questionId, Reply reply);
+
+    /**
+     * Returns the list of questions for a given house.
+     *
+     * @param houseId the ID of the house
+     * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
+     *         400 otherwise.
+     */
+    @GET
+    @Path("{houseId}/question")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<House> listHouseQuestions(@PathParam("houseId") String houseId);
+
+
+
+
 }

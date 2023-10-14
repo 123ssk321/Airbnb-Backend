@@ -1,6 +1,7 @@
 package data.dao;
 
 import data.dto.Question;
+import data.dto.Reply;
 
 public class QuestionDAO {
     private String _rid;
@@ -9,16 +10,18 @@ public class QuestionDAO {
     private String houseId;
     private String userId;
     private String message;
+    private Reply reply;
 
     public QuestionDAO() {}
 
-    public QuestionDAO(Question q) {this(q.getId(), null, q.getUserId(), q.getMessage());}
+    public QuestionDAO(Question q) {this(q.getId(), null, q.getUserId(), q.getMessage(), q.getReply());}
 
-    public QuestionDAO(String id, String houseId, String userId, String message) {
+    public QuestionDAO(String id, String houseId, String userId, String message, Reply reply) {
         this.id = id;
         this.houseId = houseId;
         this.userId = userId;
         this.message = message;
+        this.reply = reply;
     }
 
     public String get_rid() {
@@ -59,6 +62,12 @@ public class QuestionDAO {
     public void setMessage(String message) {
         this.message = message;
     }
+    public Reply getReply() {
+        return reply;
+    }
+    public void setReply(Reply reply) {
+        this.reply = reply;
+    }
     @Override
     public String toString() {
         return "Question [_rid=" + _rid +
@@ -67,6 +76,7 @@ public class QuestionDAO {
                 ", house=" + houseId +
                 ", user=" + userId +
                 ", message=" + message +
+                ", reply=" + reply +
                 ']';
     }
 
