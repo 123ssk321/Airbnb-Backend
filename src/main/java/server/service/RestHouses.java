@@ -33,7 +33,7 @@ public interface RestHouses {
     @DELETE
     @Path("/{houseId}")
     @Produces(MediaType.APPLICATION_JSON)
-    User deleteHouse(@PathParam("houseId") String houseId);
+    House deleteHouse(@PathParam("houseId") String houseId);
 
     /**
      * Modifies the information of a house. Values of null in any field of the house will be
