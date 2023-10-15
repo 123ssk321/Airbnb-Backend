@@ -2,10 +2,7 @@ package server.service;
 
 import java.util.*;
 
-import data.dto.House;
-import data.dto.Question;
-import data.dto.Reply;
-import data.dto.User;
+import data.dto.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
@@ -78,6 +75,63 @@ public interface RestHouses {
     List<House> listUserHouses(@QueryParam("userId") String userId);
 
     /**
+     * Creates a new rental for a given house.
+     *
+     * @param houseId the ID of the house.
+     * @param rental the Rental to be created.
+     * @return 200 the rentalId.
+     *         404 if the house does not exist.
+     *         400 otherwise.
+     */
+    @POST
+    @Path("/{houseId}/rental")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    String createRental(@PathParam("houseId") String houseId, Rental rental);
+
+
+    /**
+     * Modifies the information of a rental. Values of null in any field of the rental will be
+     * considered as if the fields is not to be modified (the id cannot be modified).
+     *
+     * @param houseId the ID of the house of the rental.
+     * @param rentalId the ID of the rental.
+     * @param rental Updated information.
+     * @return 200 the updated house object.
+     *         404 if no house exists with the provided houseId.
+     *         400 otherwise.
+     */
+    @PUT
+    @Path("/{houseId}/rental/{rentalId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    Rental updateRental(@PathParam("houseId") String houseId, @PathParam("rentalId") String rentalId, Rental rental);
+
+    /**
+     * Returns the list of rentals for a given house.
+     *
+     * @param houseId the ID of the house.
+     * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
+     *         404 if houseId does not exist.
+     *         400 otherwise.
+     */
+    @GET
+    @Path("/{houseId}/rental")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<Rental> listRentals(@PathParam("houseId") String houseId);
+
+    /**
+     * Returns the list of discounted rentals in the near future (2 weeks).
+     *
+     * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
+     *         400 otherwise.
+     */
+    @GET
+    @Path("/discount")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<Rental> listDiscountedRentals();
+
+    /**
      * Creates a new question for a given house.
      *
      * @param houseId the ID of the house.
@@ -106,7 +160,6 @@ public interface RestHouses {
     @POST
     @Path("/{houseId}/question/{questionId}")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
     void createReply(@PathParam("houseId") String houseId, @PathParam("questionId") String questionId, Reply reply);
 
     /**
@@ -120,8 +173,5 @@ public interface RestHouses {
     @Path("{houseId}/question")
     @Produces(MediaType.APPLICATION_JSON)
     List<House> listHouseQuestions(@PathParam("houseId") String houseId);
-
-
-
 
 }
