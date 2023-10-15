@@ -2,7 +2,8 @@ package server.resources;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import scc.utils.Hash;
+import storage.DatabaseLayer;
+import utils.Hash;
 import server.service.RestMedia;
 
 import java.util.ArrayList;
@@ -14,6 +15,8 @@ import java.util.Map;
  * Resource for managing media files, such as images.
  */
 public class MediaResource implements RestMedia {
+	private final DatabaseLayer db;
+
 	Map<String,byte[]> map = new HashMap<String,byte[]>();
 
 	public String upload(byte[] contents) {
