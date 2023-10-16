@@ -2,6 +2,7 @@ package storage;
 
 import com.azure.cosmos.models.CosmosPatchOperations;
 import data.dao.HouseDAO;
+import data.dao.UserDAO;
 import data.dto.*;
 import jakarta.ws.rs.core.Response;
 import storage.cosmosdb.HousesCDB;
@@ -25,21 +26,54 @@ public class DatabaseLayer {
     private final QuestionsCDB questions;
 
 
-
-
-
     public Result<String> createUser(User user) {
-        return null;
+        if(user == null || user.getName() == null || user.getPwd() == null ||user.getPhotoId() == null || user.getHouseIds() == null){
+            return Result.error(Response.Status.BAD_REQUEST);
+        }
+        if(user.getId() != null)
+            if(users.hasUser(user.getId()))
+                return Result.error(Response.Status.CONFLICT);
+
+        user.setId(UUID.randomUUID().toString());
+        return Result.ok(users.putUser(new UserDAO(user)).getItem().getId());
     }
 
-
     public Result<User> deleteUser(String userId, String password) {
-        return null;
+        if(userId == null || password == null){
+            return Result.error(Response.Status.BAD_REQUEST);
+        }
+        UserDAO user = users.getUser(userId);
+        if(user == null){
+            return Result.error(Response.Status.NOT_FOUND);
+        }
+        if(!user.getPwd().equals(password)){
+            return Result.error(Response.Status.FORBIDDEN);
+        }
+        return Result.ok(((UserDAO) users.delUserById(userId).getItem()).toUser());
     }
 
 
     public Result<User> updateUser(String userId, String password, User user) {
-        return null;
+        if(userId == null || password == null || user == null){
+            return Result.error(Response.Status.BAD_REQUEST);
+        }
+        UserDAO dbUser = users.getUser(userId);
+        if(dbUser == null){
+            return Result.error(Response.Status.NOT_FOUND);
+        }
+        if(!dbUser.getPwd().equals(password)){
+            return Result.error(Response.Status.FORBIDDEN);
+        }
+
+        var updateOps = CosmosPatchOperations.create();
+        if(user.getName() != null)
+            updateOps.replace("/name", user.getName());
+        if(user.getPwd() != null)
+            updateOps.replace("/pwd", user.getPwd());
+        if(user.getPhotoId() != null)
+            updateOps.replace("/photoId", user.getPhotoId());
+
+        return Result.ok(users.updateUser(userId, updateOps).getItem().toUser());
     }
 
 
@@ -159,7 +193,7 @@ public class DatabaseLayer {
 
 
     public Result<Void> createReply(String houseId, String questionId, Reply reply) {
-
+        return null;
     }
 
 

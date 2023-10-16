@@ -1,18 +1,42 @@
 package storage.cosmosdb;
 
 import com.azure.cosmos.CosmosContainer;
-import com.azure.cosmos.models.CosmosItemRequestOptions;
-import com.azure.cosmos.models.CosmosItemResponse;
-import com.azure.cosmos.models.CosmosQueryRequestOptions;
-import com.azure.cosmos.models.PartitionKey;
+import com.azure.cosmos.models.*;
 import com.azure.cosmos.util.CosmosPagedIterable;
+import data.dao.HouseDAO;
 import data.dao.UserDAO;
+import utils.Result;
 
 public class UsersCDB {
     private final CosmosContainer container;
 
     public UsersCDB(CosmosContainer container) {
         this.container = container;
+    }
+
+    public UserDAO getUser(String userId){
+        var users = container.queryItems("SELECT * FROM users WHERE users.id=\"" + userId + "\"",
+                new CosmosQueryRequestOptions(),
+                UserDAO.class);
+        var userIt = users.iterator();
+        return userIt.hasNext()? userIt.next() : null;
+    }
+
+    public CosmosPagedIterable<UserDAO> getUserById(String id) {
+        return container.queryItems("SELECT * FROM users WHERE users.id=\"" + id + "\"", new CosmosQueryRequestOptions(), UserDAO.class);
+    }
+
+    public CosmosPagedIterable<UserDAO> getUsers() {
+        return container.queryItems("SELECT * FROM users ", new CosmosQueryRequestOptions(), UserDAO.class);
+    }
+
+    public boolean hasUser(String userId){
+        return this.getUser(userId) != null;
+    }
+
+    public CosmosItemResponse<UserDAO> updateUser(String userId, CosmosPatchOperations updateOps){
+        PartitionKey key = new PartitionKey(userId);
+        return container.patchItem(userId, key, updateOps, UserDAO.class);
     }
 
     public CosmosItemResponse<Object> delUserById(String id) {
@@ -26,14 +50,6 @@ public class UsersCDB {
 
     public CosmosItemResponse<UserDAO> putUser(UserDAO user) {
         return container.createItem(user);
-    }
-
-    public CosmosPagedIterable<UserDAO> getUserById(String id) {
-        return container.queryItems("SELECT * FROM users WHERE users.id=\"" + id + "\"", new CosmosQueryRequestOptions(), UserDAO.class);
-    }
-
-    public CosmosPagedIterable<UserDAO> getUsers() {
-        return container.queryItems("SELECT * FROM users ", new CosmosQueryRequestOptions(), UserDAO.class);
     }
     
 }
