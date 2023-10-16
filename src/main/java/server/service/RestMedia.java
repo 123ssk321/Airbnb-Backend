@@ -22,6 +22,7 @@ public interface RestMedia {
      * Return the contents of a user media.
      * @param id of the media
      * @return 200 contents of the media
+     *         404 if id does not exist.
      *         400 otherwise
      */
     @GET
@@ -44,6 +45,7 @@ public interface RestMedia {
      * Return the contents of a user media.
      * @param id of the media
      * @return 200 contents of the media
+     *         404 if id does not exist.
      *         400 otherwise
      */
     @GET

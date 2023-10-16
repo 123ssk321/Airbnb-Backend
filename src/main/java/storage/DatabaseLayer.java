@@ -44,6 +44,9 @@ public class DatabaseLayer {
 
 
     public Result<String> uploadMedia(byte[] contents, String type) {
+        if (contents == null)
+            return Result.error(Response.Status.BAD_REQUEST);
+
         return switch (type) {
             case USER_MEDIA -> Result.ok(media.uploadUserPhoto(contents));
             case HOUSE_MEDIA -> Result.ok(media.uploadHousePhoto(contents));
@@ -53,11 +56,18 @@ public class DatabaseLayer {
 
 
     public Result<byte[]> downloadMedia(String id, String type) {
-        return switch (type) {
-            case USER_MEDIA -> Result.ok(media.downloadUserPhoto(id));
-            case HOUSE_MEDIA -> Result.ok(media.downloadHousePhoto(id));
+        if (id == null)
+            return Result.error(Response.Status.BAD_REQUEST);
+
+        var mediaValue = switch (type) {
+            case USER_MEDIA -> media.downloadUserPhoto(id);
+            case HOUSE_MEDIA -> media.downloadHousePhoto(id);
             default -> null;
         };
+        if (mediaValue == null || mediaValue.length == 0)
+            return Result.error(Response.Status.NOT_FOUND);
+
+        return Result.ok(mediaValue);
     }
 
 
