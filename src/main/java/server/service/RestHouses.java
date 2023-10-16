@@ -17,7 +17,6 @@ public interface RestHouses {
      *
      * @param house House to be created.
      * @return 200 the houseId.
-     *         409 if the house id already exists.
      *         400 otherwise.
      */
     @POST
@@ -39,7 +38,7 @@ public interface RestHouses {
 
     /**
      * Modifies the information of a house. Values of null in any field of the house will be
-     * considered as if the fields is not to be modified (the id cannot be modified).
+     * considered as if the fields is not to be modified (the id and ownerId cannot be modified).
      *
      * @param houseId the houseId of the user
      * @param house Updated information

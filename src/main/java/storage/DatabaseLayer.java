@@ -1,9 +1,9 @@
 package storage;
 
+import com.azure.cosmos.models.CosmosPatchOperations;
+import data.dao.HouseDAO;
 import data.dto.*;
-import server.service.RestHouses;
-import server.service.RestMedia;
-import server.service.RestUsers;
+import jakarta.ws.rs.core.Response;
 import storage.cosmosdb.HousesCDB;
 import storage.cosmosdb.QuestionsCDB;
 import storage.cosmosdb.RentalsCDB;
@@ -11,6 +11,7 @@ import storage.cosmosdb.UsersCDB;
 import utils.Result;
 
 import java.util.List;
+import java.util.UUID;
 
 public class DatabaseLayer {
     private final UsersCDB users;
@@ -18,6 +19,7 @@ public class DatabaseLayer {
     private final HousesCDB houses;
     private final RentalsCDB rentals;
     private final QuestionsCDB questions;
+
 
 
 
@@ -48,27 +50,64 @@ public class DatabaseLayer {
 
 
     public Result<String> createHouse(House house) {
-        return null;
+        if(house == null || house.getName() == null || house.getLocation() == null || house.getDescription() == null
+                || house.getPhotoIds() == null || house.getPhotoIds().length < 1 || !house.isAvailable() || house.getPrice() <= 0
+                || house.getPromotionPrice() <= 0) {
+            return Result.error(Response.Status.BAD_REQUEST);
+        }
+        // TODO: Check if owner exists
+
+        house.setId(UUID.randomUUID().toString());
+        return Result.ok(houses.putHouse(new HouseDAO(house)).getItem().getId());
     }
 
 
     public Result<House> deleteHouse(String houseId) {
-        return null;
+        if(houseId == null) {
+            return Result.error(Response.Status.BAD_REQUEST);
+        }
+        if(!houses.hasHouse(houseId)){
+            return Result.error(Response.Status.NOT_FOUND);
+        }
+        return Result.ok(((HouseDAO) houses.deleteHouseById(houseId).getItem()).toHouse());
     }
 
-
     public Result<House> updateHouse(String houseId, House house) {
-        return null;
+        if(houseId == null || house == null){
+            return Result.error(Response.Status.BAD_REQUEST);
+        }
+        if(!houses.hasHouse(houseId)){
+            return Result.error(Response.Status.NOT_FOUND);
+        }
+        var updateOps = CosmosPatchOperations.create();
+        if(house.getName() != null)
+            updateOps.replace("/name", house.getName());
+        if(house.getName() != null)
+            updateOps.replace("/description", house.getDescription());
+        if(house.getName() != null)
+            updateOps.replace("/isAvailable", house.isAvailable());
+        if(house.getName() != null)
+            updateOps.replace("/price", house.getPrice());
+        if(house.getName() != null)
+            updateOps.replace("/promotionPrice", house.getPromotionPrice());
+
+        return Result.ok(houses.updateHouse(houseId, updateOps).getItem().toHouse());
     }
 
 
     public Result<List<House>> listHousesByLocation(String location) {
-        return null;
+        if(location == null){
+            return Result.error(Response.Status.BAD_REQUEST);
+        }
+        return Result.ok(houses.getHousesByLocation(location).stream().map(HouseDAO::toHouse).toList());
     }
 
 
     public Result<List<House>> listUserHouses(String userId) {
-        return null;
+        if(userId == null){
+            return Result.error(Response.Status.BAD_REQUEST);
+        }
+        return Result.ok(houses.getHousesByOwner(userId).stream().map(HouseDAO::toHouse).toList());
     }
 
 
