@@ -16,8 +16,8 @@ import java.util.Map;
  */
 public class MediaResource extends Resource implements RestMedia {
 
-	public final static String USER_MEDIA = "user";
-	public final static String HOUSE_MEDIA = "house";
+	public static final String USER_MEDIA = "user";
+	public static final String HOUSE_MEDIA = "house";
 
 	private final DatabaseLayer db;
 
