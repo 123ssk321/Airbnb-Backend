@@ -1,5 +1,7 @@
 package utils;
 
+import jakarta.ws.rs.core.Response;
+
 /**
  *
  * Represents the result of an operation, either wrapping a result of the given type,
@@ -21,7 +23,6 @@ public interface Result<T> {
      * NOT_FOUND - access occurred to something that does not exist
      * INTERNAL_ERROR - something unexpected happened
      */
-    enum ErrorCode{ OK, CONFLICT, NOT_FOUND, BAD_REQUEST, FORBIDDEN, INTERNAL_ERROR, NOT_IMPLEMENTED }
 
     /**
      * Tests if the result is an error.
@@ -40,7 +41,7 @@ public interface Result<T> {
      * @return the error code
      *
      */
-    ErrorCode error();
+    Response.Status error();
 
     /**
      * Convenience method for returning non error results of the given type
@@ -63,7 +64,7 @@ public interface Result<T> {
      * Convenience method used to return an error
      * @return error result
      */
-    static <T> ErrorResult<T> error(ErrorCode error) {
+    static <T> ErrorResult<T> error(Response.Status error) {
         return new ErrorResult<>(error);
     }
 
@@ -91,8 +92,8 @@ class OkResult<T> implements Result<T> {
     }
 
     @Override
-    public ErrorCode error() {
-        return ErrorCode.OK;
+    public Response.Status error() {
+        return Response.Status.OK;
     }
 
     public String toString() {
@@ -102,9 +103,9 @@ class OkResult<T> implements Result<T> {
 
 class ErrorResult<T> implements Result<T> {
 
-    final ErrorCode error;
+    final Response.Status error;
 
-    ErrorResult(ErrorCode error) {
+    ErrorResult(Response.Status error) {
         this.error = error;
     }
 
@@ -119,7 +120,7 @@ class ErrorResult<T> implements Result<T> {
     }
 
     @Override
-    public ErrorCode error() {
+    public Response.Status error() {
         return error;
     }
 
