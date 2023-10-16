@@ -6,6 +6,7 @@ import java.util.Arrays;
 public class House {
     private String id;
     private String name;
+    private String ownerId;
     private String location;
     private String description;
     private String[] photoIds; // list or array?
@@ -13,10 +14,11 @@ public class House {
     private float price; //per day, week or month?
     private float promotionPrice; //per day, week or month?
 
-    public House(String id, String name, String location, String description, String[] photoIds, boolean isAvailable, float price, float promotionPrice) {
+    public House(String id, String name, String ownerId, String location, String description, String[] photoIds, boolean isAvailable, float price, float promotionPrice) {
         super();
         this.id = id;
         this.name = name;
+        this.ownerId = ownerId;
         this.location = location;
         this.description = description;
         this.photoIds = photoIds;
@@ -36,6 +38,12 @@ public class House {
     }
     public void setName(String name) {
         this.name = name;
+    }
+    public String getOwnerId() {
+        return ownerId;
+    }
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
     }
     public String getLocation() {
         return location;
@@ -77,9 +85,10 @@ public class House {
     @Override
     public String toString() {
         return "House [" +
-                "name='" + name + '\'' +
-                ", location='" + location + '\'' +
-                ", description='" + description + '\'' +
+                "name=" + name +
+                ", ownerId=" + ownerId +
+                ", location=" + location +
+                ", description=" + description +
                 ", photos=" + Arrays.toString(photoIds) +
                 ", available=" + isAvailable +
                 ", price=" + price +

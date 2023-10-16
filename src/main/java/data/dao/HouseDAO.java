@@ -9,21 +9,23 @@ public class HouseDAO {
     private String _ts;
     private String id;
     private String name;
+    private String ownerId;
     private String location;
     private String description;
-    private String[] photoIds; // list or array?
+    private String[] photoIds;
     private boolean isAvailable;
-    private float price; //per day, week or month?
-    private float promotionPrice; //per day, week or month?
+    private float price; // per day
+    private float promotionPrice; // per day
 
     public HouseDAO() {}
 
-    public HouseDAO(House h) {this(h.getId(), h.getName(), h.getLocation(), h.getDescription(), h.getPhotoIds(), h.isAvailable(), h.getPrice(), h.getPromotionPrice());}
+    public HouseDAO(House h) {this(h.getId(), h.getName(), h.getOwnerId(), h.getLocation(), h.getDescription(), h.getPhotoIds(), h.isAvailable(), h.getPrice(), h.getPromotionPrice());}
 
-    public HouseDAO(String id, String name, String location, String description, String[] photoIds, boolean isAvailable, float price, float promotionPrice) {
+    public HouseDAO(String id, String name, String ownerId, String location, String description, String[] photoIds, boolean isAvailable, float price, float promotionPrice) {
         super();
         this.id = id;
         this.name = name;
+        this.ownerId = ownerId;
         this.location = location;
         this.description = description;
         this.photoIds = photoIds;
@@ -58,6 +60,12 @@ public class HouseDAO {
     }
     public void setName(String name) {
         this.name = name;
+    }
+    public String getOwnerId() {
+        return ownerId;
+    }
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
     }
     public String getLocation() {
         return location;
@@ -96,14 +104,15 @@ public class HouseDAO {
         this.promotionPrice = promotionPrice;
     }
     public House toHouse() {
-        return new House(id, name, location, description, photoIds == null? null : Arrays.copyOf(photoIds, photoIds.length),
+        return new House(id, name, ownerId, location, description, photoIds == null? null : Arrays.copyOf(photoIds, photoIds.length),
                 isAvailable, price, promotionPrice);
     }
     @Override
     public String toString() {
         return "HouseDAO [_rid=" + _rid +
                 ", _ts=" + _ts +
-                "name=" + name +
+                ", name=" + name +
+                ", owner=" + ownerId +
                 ", location=" + location +
                 ", description='" + description +
                 ", photos=" + Arrays.toString(photoIds) +
