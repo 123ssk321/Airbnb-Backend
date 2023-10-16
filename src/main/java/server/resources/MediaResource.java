@@ -14,37 +14,32 @@ import java.util.Map;
 /**
  * Resource for managing media files, such as images.
  */
-public class MediaResource implements RestMedia {
+public class MediaResource extends Resource implements RestMedia {
+
+	public final static String USER_MEDIA = "user";
+	public final static String HOUSE_MEDIA = "house";
+
 	private final DatabaseLayer db;
 
-	Map<String,byte[]> map = new HashMap<String,byte[]>();
-
-	public String upload(byte[] contents) {
-		String key = Hash.of(contents);
-		map.put( key, contents); // Lab 1
-		// UploadToStorage.upload("house.jpg", contents); // Lab 2
-		return key;
+	public MediaResource(DatabaseLayer db){
+		super();
+		this.db = db;
 	}
 
-	public byte[] download(@PathParam("id") String id) {
-		// Lab 1
-		var img = map.get(id);
-		if (id == null)
-			throw new ServiceUnavailableException();
-		else
-			return img;
-
-		/*//Lab 2
-		return DownloadFromStorage.download("house.jpg");*/
+	public String uploadUserMedia(byte[] contents) {
+		return super.getResult(() -> db.uploadMedia(contents, USER_MEDIA));
 	}
 
-	/**
-	 * Lists the ids of images stored.
-	 */
-	@GET
-	@Path("/")
-	@Produces(MediaType.APPLICATION_JSON)
-	public List<String> list() {
-		return new ArrayList<String>( map.keySet());
+	public byte[] downloadUserMedia(String id) {
+		return super.getResult(() -> db.downloadMedia(id, USER_MEDIA));
 	}
+
+	public String uploadHouseMedia(byte[] contents) {
+		return super.getResult(() -> db.uploadMedia(contents, HOUSE_MEDIA));
+	}
+
+	public byte[] downloadHouseMedia(String id) {
+		return super.getResult(() -> db.downloadMedia(id, HOUSE_MEDIA));
+	}
+
 }

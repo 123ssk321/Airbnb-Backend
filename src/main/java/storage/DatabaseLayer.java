@@ -13,7 +13,11 @@ import utils.Result;
 import java.util.List;
 import java.util.UUID;
 
+import static server.resources.MediaResource.HOUSE_MEDIA;
+import static server.resources.MediaResource.USER_MEDIA;
+
 public class DatabaseLayer {
+
     private final UsersCDB users;
     private final MediaBlobStorage media;
     private final HousesCDB houses;
@@ -39,13 +43,21 @@ public class DatabaseLayer {
     }
 
 
-    public Result<String> upload(byte[] contents) {
-        return null;
+    public Result<String> uploadMedia(byte[] contents, String type) {
+        return switch (type) {
+            case USER_MEDIA -> Result.ok(media.uploadUserPhoto(contents));
+            case HOUSE_MEDIA -> Result.ok(media.uploadHousePhoto(contents));
+            default -> null;
+        };
     }
 
 
-    public Result<byte[]> download(String id) {
-        return new byte[0];
+    public Result<byte[]> downloadMedia(String id, String type) {
+        return switch (type) {
+            case USER_MEDIA -> Result.ok(media.downloadUserPhoto(id));
+            case HOUSE_MEDIA -> Result.ok(media.downloadHousePhoto(id));
+            default -> null;
+        };
     }
 
 
