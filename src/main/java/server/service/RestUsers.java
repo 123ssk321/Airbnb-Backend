@@ -23,8 +23,7 @@ public interface RestUsers {
     String createUser(User user);
 
     /**
-     * Deletes the user identified by userId. The files owned by the user should be eventually removed (asynchronous
-     * deletion is ok).
+     * Deletes the user identified by userId.
      *
      * @param userId the userId of the user
      * @param password password of the user
