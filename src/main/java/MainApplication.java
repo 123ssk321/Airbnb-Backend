@@ -1,3 +1,9 @@
+package main.java;
+
+import com.azure.cosmos.CosmosClient;
+import com.azure.cosmos.CosmosClientBuilder;
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobContainerClientBuilder;
 import jakarta.ws.rs.core.Application;
 import main.java.server.resources.ControlResource;
 import main.java.server.resources.HousesResource;
