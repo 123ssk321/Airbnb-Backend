@@ -1,12 +1,9 @@
-package server.resources;
+package main.java.server.resources;
 
 import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
-
-import java.util.function.Function;
 import java.util.function.Supplier;
 
-import utils.Result;
+import main.java.utils.Result;
 
 public class Resource {
 

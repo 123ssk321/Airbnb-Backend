@@ -1,11 +1,10 @@
-package storage.cosmosdb;
+package main.java.storage.cosmosdb;
 
 import com.azure.cosmos.CosmosContainer;
 import com.azure.cosmos.models.*;
 import com.azure.cosmos.util.CosmosPagedIterable;
-import data.dao.HouseDAO;
-import data.dao.UserDAO;
-import utils.Result;
+import main.java.data.dao.UserDAO;
+
 
 public class UsersCDB {
     private final CosmosContainer container;

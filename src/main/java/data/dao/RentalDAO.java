@@ -1,6 +1,6 @@
-package data.dao;
+package main.java.data.dao;
 
-import data.dto.Rental;
+import main.java.data.dto.Rental;
 
 public class RentalDAO {
     private String _rid;

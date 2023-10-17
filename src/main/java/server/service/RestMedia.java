@@ -1,4 +1,4 @@
-package server.service;
+package main.java.server.service;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;

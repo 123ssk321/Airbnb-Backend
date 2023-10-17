@@ -1,15 +1,8 @@
-package server.resources;
+package main.java.server.resources;
 
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import storage.DatabaseLayer;
-import utils.Hash;
-import server.service.RestMedia;
+import main.java.storage.DatabaseLayer;
+import main.java.server.service.RestMedia;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Resource for managing media files, such as images.

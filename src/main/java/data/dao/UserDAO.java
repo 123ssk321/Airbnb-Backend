@@ -1,6 +1,6 @@
-package data.dao;
+package main.java.data.dao;
 
-import data.dto.User;
+import main.java.data.dto.User;
 
 import java.util.Arrays;
 

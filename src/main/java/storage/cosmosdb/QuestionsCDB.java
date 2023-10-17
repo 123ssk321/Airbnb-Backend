@@ -1,4 +1,4 @@
-package storage.cosmosdb;
+package main.java.storage.cosmosdb;
 
 import com.azure.cosmos.CosmosContainer;
 

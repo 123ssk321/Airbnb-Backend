@@ -1,12 +1,13 @@
-package server.resources;
+package main.java.server.resources;
 
-import data.dto.House;
-import data.dto.Question;
-import data.dto.Rental;
-import data.dto.Reply;
+import main.java.data.dto.House;
+import main.java.data.dto.Question;
+import main.java.data.dto.Rental;
+import main.java.data.dto.Reply;
 import jakarta.ws.rs.WebApplicationException;
-import server.service.RestHouses;
-import storage.DatabaseLayer;
+import main.java.server.service.RestHouses;
+import main.java.server.resources.Resource;
+import main.java.storage.DatabaseLayer;
 
 import java.util.List;
 

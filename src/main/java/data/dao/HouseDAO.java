@@ -1,6 +1,6 @@
-package data.dao;
+package main.java.data.dao;
 
-import data.dto.House;
+import main.java.data.dto.House;
 
 import java.util.Arrays;
 

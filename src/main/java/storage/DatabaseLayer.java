@@ -1,21 +1,19 @@
-package storage;
+package main.java.storage;
 
+import com.azure.cosmos.CosmosClient;
 import com.azure.cosmos.models.CosmosPatchOperations;
-import data.dao.HouseDAO;
-import data.dao.UserDAO;
-import data.dto.*;
+import com.azure.storage.blob.BlobContainerClient;
 import jakarta.ws.rs.core.Response;
-import storage.cosmosdb.HousesCDB;
-import storage.cosmosdb.QuestionsCDB;
-import storage.cosmosdb.RentalsCDB;
-import storage.cosmosdb.UsersCDB;
-import utils.Result;
-
+import main.java.utils.Result;
 import java.util.List;
 import java.util.UUID;
+import main.java.data.dto.*;
+import main.java.data.dao.*;
+import main.java.storage.cosmosdb.*;
+import main.java.storage.MediaBlobStorage;
+import static main.java.server.resources.MediaResource.HOUSE_MEDIA;
+import static main.java.server.resources.MediaResource.USER_MEDIA;
 
-import static server.resources.MediaResource.HOUSE_MEDIA;
-import static server.resources.MediaResource.USER_MEDIA;
 
 public class DatabaseLayer {
 
@@ -25,16 +23,32 @@ public class DatabaseLayer {
     private final RentalsCDB rentals;
     private final QuestionsCDB questions;
 
+    public DatabaseLayer(CosmosClient cClient,
+                         String cosmosdbDatabase,
+                         String userCosmosDBContainerName,
+                         String houseCosmosDBContainerName,
+                         String rentalCosmosDBContainerName,
+                         String questionCosmosDBContainerName,
+                         BlobContainerClient userBlobContainer,
+                         BlobContainerClient houseBlobContainer){
+        var db = cClient.getDatabase(cosmosdbDatabase);
+
+        users = new UsersCDB(db.getContainer(userCosmosDBContainerName));
+        houses = new HousesCDB(db.getContainer(houseCosmosDBContainerName));
+        rentals = new RentalsCDB(db.getContainer(rentalCosmosDBContainerName));
+        questions = new QuestionsCDB(db.getContainer(questionCosmosDBContainerName));
+        media = new MediaBlobStorage(userBlobContainer, houseBlobContainer);
+    }
 
     public Result<String> createUser(User user) {
-        if(user == null || user.getName() == null || user.getPwd() == null ||user.getPhotoId() == null || user.getHouseIds() == null){
+        if(user == null || user.getId() == null || user.getName() == null || user.getPwd() == null
+                || user.getPhotoId() == null || user.getHouseIds() == null){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        if(user.getId() != null)
-            if(users.hasUser(user.getId()))
-                return Result.error(Response.Status.CONFLICT);
 
-        user.setId(UUID.randomUUID().toString());
+        if(users.hasUser(user.getId()))
+            return Result.error(Response.Status.CONFLICT);
+
         return Result.ok(users.putUser(new UserDAO(user)).getItem().getId());
     }
 
@@ -138,14 +152,11 @@ public class DatabaseLayer {
         var updateOps = CosmosPatchOperations.create();
         if(house.getName() != null)
             updateOps.replace("/name", house.getName());
-        if(house.getName() != null)
+        if(house.getDescription() != null)
             updateOps.replace("/description", house.getDescription());
-        if(house.getName() != null)
-            updateOps.replace("/isAvailable", house.isAvailable());
-        if(house.getName() != null)
-            updateOps.replace("/price", house.getPrice());
-        if(house.getName() != null)
-            updateOps.replace("/promotionPrice", house.getPromotionPrice());
+        updateOps.replace("/price", house.getPrice());
+        updateOps.replace("/promotionPrice", house.getPromotionPrice());
+        updateOps.replace("/isAvailable", house.isAvailable());
 
         return Result.ok(houses.updateHouse(houseId, updateOps).getItem().toHouse());
     }

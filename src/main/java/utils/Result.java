@@ -1,4 +1,4 @@
-package utils;
+package main.java.utils;
 
 import jakarta.ws.rs.core.Response;
 

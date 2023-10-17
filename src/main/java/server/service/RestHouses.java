@@ -1,8 +1,8 @@
-package server.service;
+package main.java.server.service;
 
 import java.util.*;
 
-import data.dto.*;
+import main.java.data.dto.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 

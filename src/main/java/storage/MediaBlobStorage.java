@@ -1,8 +1,8 @@
-package storage;
+package main.java.storage;
 
 import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobContainerClient;
-import utils.Hash;
+import main.java.utils.Hash;
 
 public class MediaBlobStorage {
     private final BlobContainerClient userBlobContainerClient;

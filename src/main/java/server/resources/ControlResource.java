@@ -1,4 +1,4 @@
-package server.resources;
+package main.java.server.resources;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;

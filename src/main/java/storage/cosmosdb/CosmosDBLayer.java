@@ -1,4 +1,4 @@
-package storage.cosmosdb;
+package main.java.storage.cosmosdb;
 
 import com.azure.cosmos.*;
 import com.azure.cosmos.models.CosmosItemRequestOptions;
@@ -6,7 +6,7 @@ import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
 import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.util.CosmosPagedIterable;
-import data.dao.UserDAO;
+import main.java.data.dao.UserDAO;
 
 public class CosmosDBLayer {
 	private static final String CONNECTION_URL = "";

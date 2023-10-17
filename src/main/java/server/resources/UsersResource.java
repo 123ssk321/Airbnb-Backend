@@ -1,8 +1,8 @@
-package server.resources;
+package main.java.server.resources;
 
-import data.dto.User;
-import server.service.RestUsers;
-import storage.DatabaseLayer;
+import main.java.data.dto.User;
+import main.java.server.service.RestUsers;
+import main.java.storage.DatabaseLayer;
 
 public class UsersResource extends Resource implements RestUsers {
     private final DatabaseLayer db;

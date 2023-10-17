@@ -1,7 +1,7 @@
-package data.dao;
+package main.java.data.dao;
 
-import data.dto.Question;
-import data.dto.Reply;
+import main.java.data.dto.Question;
+import main.java.data.dto.Reply;
 
 public class QuestionDAO {
     private String _rid;

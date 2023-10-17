@@ -1,6 +1,6 @@
-package server.service;
+package main.java.server.service;
 
-import data.dto.User;
+import main.java.data.dto.User;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 

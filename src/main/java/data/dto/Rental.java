@@ -1,4 +1,4 @@
-package data.dto;
+package main.java.data.dto;
 
 public class Rental {
     private String id;

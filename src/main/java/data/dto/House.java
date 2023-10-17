@@ -1,4 +1,4 @@
-package data.dto;
+package main.java.data.dto;
 
 import java.util.Arrays;
 
