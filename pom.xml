@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>pt.unl.fct.di.scc</groupId>
-    <artifactId>scc2324-lab1</artifactId>
+    <artifactId>scc2324-project</artifactId>
     <version>1.0</version>
     <packaging>war</packaging>
     <properties>
@@ -148,8 +148,8 @@
                             </resource>
                         </resources>
                     </deployment>
-                    <resourceGroup>scc-backend-rg-57449</resourceGroup>
-                    <appName>scc-backend-57449</appName>
+                    <resourceGroup>scc24-rg-westeurope-57449</resourceGroup>
+                    <appName>scc24appwesteurope57449</appName>
                 </configuration>
             </plugin>
         </plugins>
