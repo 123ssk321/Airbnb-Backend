@@ -2,11 +2,15 @@ package scc.storage;
 
 import com.azure.cosmos.CosmosClient;
 import com.azure.cosmos.models.CosmosPatchOperations;
+import com.azure.resourcemanager.monitor.models.SyslogDataSource;
 import com.azure.storage.blob.BlobContainerClient;
 import jakarta.ws.rs.core.Response;
+import org.glassfish.jaxb.runtime.v2.runtime.output.SAXOutput;
 import scc.utils.Result;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Logger;
+
 import scc.data.dto.*;
 import scc.data.dao.*;
 import scc.storage.cosmosdb.*;
@@ -22,6 +26,7 @@ public class DatabaseLayer {
     private final HousesCDB houses;
     private final RentalsCDB rentals;
     private final QuestionsCDB questions;
+    private static final Logger Log = Logger.getLogger(DatabaseLayer.class.getName());
 
     public DatabaseLayer(CosmosClient cClient,
                          String cosmosdbDatabase,
@@ -41,15 +46,26 @@ public class DatabaseLayer {
     }
 
     public Result<String> createUser(User user) {
+        System.out.println("DatabaseLayer.createUser");
+        System.out.println("Processing request...");
+        Log.info("Create user : " + user);
         if(user == null || user.getId() == null || user.getName() == null || user.getPwd() == null
                 || user.getPhotoId() == null || user.getHouseIds() == null){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-
+        Log.info("Well formed request");
         if(users.hasUser(user.getId()))
             return Result.error(Response.Status.CONFLICT);
-
-        return Result.ok(users.putUser(new UserDAO(user)).getItem().getId());
+        Log.info("UserId does not exists.");
+        Log.info("Creating UserDAO");
+        var userDao = new UserDAO(user);
+        Log.info("Inserting UserDAO in database");
+        var res = users.putUser(userDao);
+        Log.info("Getting return object from insert in database");
+        var item = res.getItem();
+        Log.info("Returning 200 OK " + item.getId());
+        return Result.ok(item.getId());
+        //return Result.ok(users.putUser(new UserDAO(user)).getItem().getId());
     }
 
     public Result<User> deleteUser(String userId, String password) {
@@ -170,11 +186,11 @@ public class DatabaseLayer {
     }
 
 
-    public Result<List<House>> listUserHouses(String userId) {
-        if(userId == null){
+    public Result<List<House>> listUserHouses(String ownerId) {
+        if(ownerId == null){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        return Result.ok(houses.getHousesByOwner(userId).stream().map(HouseDAO::toHouse).toList());
+        return Result.ok(houses.getHousesByOwner(ownerId).stream().map(HouseDAO::toHouse).toList());
     }
 
 

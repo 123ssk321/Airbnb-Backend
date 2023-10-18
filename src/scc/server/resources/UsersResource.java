@@ -13,6 +13,11 @@ public class UsersResource extends Resource implements RestUsers {
     }
 
     @Override
+    public String hello() {
+        return "USERS ENDPOINT: WORKING";
+    }
+
+    @Override
     public String createUser(User user) {
         return super.getResult(() -> db.createUser(user));
     }

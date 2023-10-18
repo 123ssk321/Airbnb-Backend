@@ -1,5 +1,7 @@
 package scc.data.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Arrays;
 
 
@@ -10,6 +12,7 @@ public class House {
     private String location;
     private String description;
     private String[] photoIds; // list or array?
+    @JsonProperty("isAvailable")
     private boolean isAvailable;
     private float price; //per day, week or month?
     private float promotionPrice; //per day, week or month?

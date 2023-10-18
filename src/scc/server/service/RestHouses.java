@@ -70,6 +70,7 @@ public interface RestHouses {
      *         400 otherwise.
      */
     @GET
+    @Path("/{ownerId}")
     @Produces(MediaType.APPLICATION_JSON)
     List<House> listUserHouses(@QueryParam("userId") String userId);
 

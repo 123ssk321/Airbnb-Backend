@@ -38,8 +38,8 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public List<House> listUserHouses(String userId) {
-        return super.getResult(() -> db.listUserHouses(userId));
+    public List<House> listUserHouses(String ownerId) {
+        return super.getResult(() -> db.listUserHouses(ownerId));
     }
 
     @Override
