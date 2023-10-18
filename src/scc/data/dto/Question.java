@@ -20,6 +20,8 @@ public class Question {
         this.reply = reply;
     }
 
+    public Question(){}
+
 
     public String getId() {
         return id;

@@ -22,6 +22,7 @@ public class User {
 		this.photoId = photoId;
 		this.houseIds = houseIds;
 	}
+	public User(){}
 	public String getId() {
 		return id;
 	}

@@ -9,6 +9,8 @@ public class Reply {
         this.message = message;
     }
 
+    public Reply(){}
+
     public String getUserId() {
         return userId;
     }

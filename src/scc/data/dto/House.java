@@ -27,6 +27,8 @@ public class House {
         this.promotionPrice = promotionPrice;
     }
 
+    public House(){}
+
     public String getId() {
         return id;
     }
