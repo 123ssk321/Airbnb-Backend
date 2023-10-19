@@ -5,8 +5,11 @@ import com.azure.cosmos.models.*;
 import com.azure.cosmos.util.CosmosPagedIterable;
 import scc.data.dao.HouseDAO;
 
+import java.util.logging.Logger;
+
 public class HousesCDB {
     private final CosmosContainer container;
+    private static final Logger Log = Logger.getLogger(HousesCDB.class.getName());
 
     public HousesCDB(CosmosContainer container) {
         this.container = container;
@@ -18,12 +21,18 @@ public class HousesCDB {
     }
 
     public HouseDAO getHouse(String houseId){
-        var houses = container.queryItems(
-                "SELECT * FROM houses WHERE houses.id=\"" + houseId + "\"",
-                new CosmosQueryRequestOptions(),
-                HouseDAO.class);
-        var houseIt = houses.iterator();
-        return houseIt.hasNext()? houseIt.next() : null;
+        try {
+            var houses = container.queryItems(
+                    "SELECT * FROM houses WHERE houses.id=\"" + houseId + "\"",
+                    new CosmosQueryRequestOptions(),
+                    HouseDAO.class);
+            var houseIt = houses.iterator();
+            return houseIt.hasNext()? houseIt.next() : null;
+        } catch (Exception e){
+            Log.info("Execption caught:" + e);
+            return null;
+        }
+
     }
 
     public boolean hasHouse(String houseId){

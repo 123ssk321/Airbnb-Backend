@@ -14,8 +14,8 @@ public class House {
     private String[] photoIds; // list or array?
     @JsonProperty("isAvailable")
     private boolean isAvailable;
-    private float price; //per day, week or month?
-    private float promotionPrice; //per day, week or month?
+    private float price; //per day
+    private float promotionPrice; //per day
 
     public House(String id, String name, String ownerId, String location, String description, String[] photoIds, boolean isAvailable, float price, float promotionPrice) {
         super();

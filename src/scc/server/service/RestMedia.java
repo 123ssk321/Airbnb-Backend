@@ -5,7 +5,7 @@ import jakarta.ws.rs.core.MediaType;
 
 @Path(RestMedia.PATH)
 public interface RestMedia {
-    static final String PATH="/media";
+    String PATH="/media";
 
     /**
      * Post a new user image.The id of the image is its hash prefixed with "user-".
@@ -14,6 +14,7 @@ public interface RestMedia {
      *         400 otherwise
      */
     @POST
+    @Path("/users")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
     String uploadUserMedia(byte[] contents);
@@ -26,7 +27,7 @@ public interface RestMedia {
      *         400 otherwise
      */
     @GET
-    @Path("/{id}")
+    @Path("/users/{id}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     byte[] downloadUserMedia(@PathParam("id") String id);
 
@@ -37,6 +38,7 @@ public interface RestMedia {
      *         400 otherwise
      */
     @POST
+    @Path("/houses")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
     String uploadHouseMedia(byte[] contents);
@@ -49,7 +51,7 @@ public interface RestMedia {
      *         400 otherwise
      */
     @GET
-    @Path("/{id}")
+    @Path("/houses/{id}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     byte[] downloadHouseMedia(@PathParam("id") String id);
 

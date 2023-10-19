@@ -6,8 +6,8 @@ import jakarta.ws.rs.core.MediaType;
 
 @Path(RestUsers.PATH)
 public interface RestUsers {
-    static final String PATH="/users";
-    public static final String PASSWORD = "password";
+    String PATH="/users";
+    String PASSWORD = "password";
 
     /**
      * Creates a new user.

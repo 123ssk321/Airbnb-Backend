@@ -19,18 +19,14 @@ public class UsersCDB {
 
     public UserDAO getUser(String userId){
         try{
-            Log.info("Selecting an user with id="+userId);
             var users = container.queryItems("SELECT * FROM users WHERE users.id=\"" + userId + "\"",
                     new CosmosQueryRequestOptions(),
                     UserDAO.class);
-            Log.info("Getting iterator");
             var userIt = users.iterator();
-            Log.info("Checking if query returned any userss");
             var res = userIt.hasNext();
-            Log.info("Query returned users: " + res);
-            var ret = res? userIt.next() : null;
-            return ret;
+            return res? userIt.next() : null;
         } catch (Exception ce){
+            Log.info("Execption caught:" + ce);
             return null;
         }
     }
@@ -44,7 +40,6 @@ public class UsersCDB {
     }
 
     public boolean hasUser(String userId){
-        Log.info("Checking if exists an user with id="+userId);
         return this.getUser(userId) != null;
     }
 
@@ -55,10 +50,7 @@ public class UsersCDB {
 
     public CosmosItemResponse<Object> delUserById(String id) {
         PartitionKey key = new PartitionKey(id);
-        var response = container.deleteItem(id, key, new CosmosItemRequestOptions());
-        Log.info("Response code: " + response.getStatusCode());
-        return (CosmosItemResponse<Object>) response.getItem();
-        //return container.deleteItem(id, key, new CosmosItemRequestOptions());
+        return container.deleteItem(id, key, new CosmosItemRequestOptions());
     }
 
     public CosmosItemResponse<Object> delUser(UserDAO user) {
@@ -66,7 +58,6 @@ public class UsersCDB {
     }
 
     public CosmosItemResponse<UserDAO> putUser(UserDAO user) {
-        Log.info("Inserting User in database");
         return container.createItem(user);
     }
     

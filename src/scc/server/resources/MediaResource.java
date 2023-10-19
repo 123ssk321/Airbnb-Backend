@@ -3,14 +3,12 @@ package scc.server.resources;
 import scc.storage.DatabaseLayer;
 import scc.server.service.RestMedia;
 
-
 /**
  * Resource for managing media files, such as images.
  */
 public class MediaResource extends Resource implements RestMedia {
 
-	public static final String USER_MEDIA = "user";
-	public static final String HOUSE_MEDIA = "house";
+	public enum BlobType {USER, HOUSE}
 
 	private final DatabaseLayer db;
 
@@ -20,19 +18,19 @@ public class MediaResource extends Resource implements RestMedia {
 	}
 
 	public String uploadUserMedia(byte[] contents) {
-		return super.getResult(() -> db.uploadMedia(contents, USER_MEDIA));
+		return super.getResult(() -> db.uploadMedia(contents, BlobType.USER));
 	}
 
 	public byte[] downloadUserMedia(String id) {
-		return super.getResult(() -> db.downloadMedia(id, USER_MEDIA));
+		return super.getResult(() -> db.downloadMedia(id, BlobType.USER));
 	}
 
 	public String uploadHouseMedia(byte[] contents) {
-		return super.getResult(() -> db.uploadMedia(contents, HOUSE_MEDIA));
+		return super.getResult(() -> db.uploadMedia(contents, BlobType.HOUSE));
 	}
 
 	public byte[] downloadHouseMedia(String id) {
-		return super.getResult(() -> db.downloadMedia(id, HOUSE_MEDIA));
+		return super.getResult(() -> db.downloadMedia(id, BlobType.HOUSE));
 	}
 
 }

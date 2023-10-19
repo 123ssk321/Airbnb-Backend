@@ -8,9 +8,8 @@ import jakarta.ws.rs.core.MediaType;
 
 @Path(RestHouses.PATH)
 public interface RestHouses {
-    static final String PATH = "/house";
-    static final String LOCATION = "location";
-    static final String USERID = "userId";
+    String PATH = "/house";
+    String LOCATION = "location";
 
     /**
      * Creates a new house.
@@ -30,6 +29,7 @@ public interface RestHouses {
      * @param houseId the userId of the user
      * @return 200 the deleted house object
      *         404 if no house exists with the provided houseId
+     *         400 otherwise.
      */
     @DELETE
     @Path("/{houseId}")
@@ -44,6 +44,7 @@ public interface RestHouses {
      * @param house Updated information
      * @return 200 the updated house object
      *         404 if no house exists with the provided houseId
+     *         400 otherwise.
      */
     @PUT
     @Path("/{houseId}")
@@ -60,19 +61,19 @@ public interface RestHouses {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    List<House> listHousesByLocation(@QueryParam("location") String location);
+    List<House> listHousesByLocation(@QueryParam(LOCATION) String location);
 
     /**
      * Returns the list of houses of a given user.
      *
-     * @param userId ID of the user
+     * @param ownerId ID of the user
      * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
      *         400 otherwise.
      */
     @GET
     @Path("/{ownerId}")
     @Produces(MediaType.APPLICATION_JSON)
-    List<House> listUserHouses(@QueryParam("userId") String userId);
+    List<House> listUserHouses(@PathParam("ownerId") String ownerId);
 
     /**
      * Creates a new rental for a given house.
@@ -167,6 +168,7 @@ public interface RestHouses {
      *
      * @param houseId the ID of the house
      * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
+     *         404 if the houseId does not exist.
      *         400 otherwise.
      */
     @GET

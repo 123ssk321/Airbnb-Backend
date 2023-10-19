@@ -6,6 +6,7 @@ import com.azure.resourcemanager.monitor.models.SyslogDataSource;
 import com.azure.storage.blob.BlobContainerClient;
 import jakarta.ws.rs.core.Response;
 import org.glassfish.jaxb.runtime.v2.runtime.output.SAXOutput;
+import scc.server.resources.MediaResource;
 import scc.utils.Result;
 import java.util.List;
 import java.util.UUID;
@@ -14,10 +15,7 @@ import java.util.logging.Logger;
 import scc.data.dto.*;
 import scc.data.dao.*;
 import scc.storage.cosmosdb.*;
-
-import static scc.server.resources.MediaResource.HOUSE_MEDIA;
-import static scc.server.resources.MediaResource.USER_MEDIA;
-
+import scc.server.resources.MediaResource.BlobType;
 
 public class DatabaseLayer {
 
@@ -46,26 +44,15 @@ public class DatabaseLayer {
     }
 
     public Result<String> createUser(User user) {
-        System.out.println("DatabaseLayer.createUser");
-        System.out.println("Processing request...");
-        Log.info("Create user : " + user);
         if(user == null || user.getId() == null || user.getName() == null || user.getPwd() == null
-                || user.getPhotoId() == null || user.getHouseIds() == null){
+                || user.getPhotoId() == null || !media.exists(user.getPhotoId(), BlobType.USER)
+                || user.getHouseIds() == null){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        Log.info("Well formed request");
         if(users.hasUser(user.getId()))
             return Result.error(Response.Status.CONFLICT);
-        Log.info("UserId does not exists.");
-        Log.info("Creating UserDAO");
-        var userDao = new UserDAO(user);
-        Log.info("Inserting UserDAO in database");
-        var res = users.putUser(userDao);
-        Log.info("Getting return object from insert in database");
-        var item = res.getItem();
-        Log.info("Returning 200 OK " + item.getId());
-        return Result.ok(item.getId());
-        //return Result.ok(users.putUser(new UserDAO(user)).getItem().getId());
+
+        return Result.ok(users.putUser(new UserDAO(user)).getItem().getId());
     }
 
     public Result<User> deleteUser(String userId, String password) {
@@ -107,41 +94,43 @@ public class DatabaseLayer {
     }
 
 
-    public Result<String> uploadMedia(byte[] contents, String type) {
+    public Result<String> uploadMedia(byte[] contents, BlobType type) {
         if (contents == null)
             return Result.error(Response.Status.BAD_REQUEST);
 
         return switch (type) {
-            case USER_MEDIA -> Result.ok(media.uploadUserPhoto(contents));
-            case HOUSE_MEDIA -> Result.ok(media.uploadHousePhoto(contents));
-            default -> null;
+            case USER -> Result.ok(media.uploadUserPhoto(contents));
+            case HOUSE -> Result.ok(media.uploadHousePhoto(contents));
         };
     }
 
 
-    public Result<byte[]> downloadMedia(String id, String type) {
+    public Result<byte[]> downloadMedia(String id, BlobType type) {
         if (id == null)
             return Result.error(Response.Status.BAD_REQUEST);
-
-        var mediaValue = switch (type) {
-            case USER_MEDIA -> media.downloadUserPhoto(id);
-            case HOUSE_MEDIA -> media.downloadHousePhoto(id);
-            default -> null;
-        };
-        if (mediaValue == null || mediaValue.length == 0)
+        if (!media.exists(id, type))
             return Result.error(Response.Status.NOT_FOUND);
 
+        var mediaValue = switch (type) {
+            case USER -> media.downloadUserPhoto(id);
+            case HOUSE -> media.downloadHousePhoto(id);
+        };
         return Result.ok(mediaValue);
     }
 
 
     public Result<String> createHouse(House house) {
         if(house == null || house.getName() == null || house.getLocation() == null || house.getDescription() == null
-                || house.getPhotoIds() == null || house.getPhotoIds().length < 1 || !house.isAvailable() || house.getPrice() <= 0
-                || house.getPromotionPrice() <= 0) {
+                || house.getPhotoIds() == null || house.getPhotoIds().length < 1
+                || !house.isAvailable() || house.getPrice() <= 0 || house.getPromotionPrice() <= 0) {
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        // TODO: Check if owner exists
+        for (String photoId : house.getPhotoIds()){
+            if (!media.exists(photoId, BlobType.HOUSE))
+                return Result.error(Response.Status.BAD_REQUEST);
+        }
+        if (!users.hasUser(house.getOwnerId()))
+            return Result.error(Response.Status.BAD_REQUEST);
 
         house.setId(UUID.randomUUID().toString());
         return Result.ok(houses.putHouse(new HouseDAO(house)).getItem().getId());
@@ -166,12 +155,19 @@ public class DatabaseLayer {
             return Result.error(Response.Status.NOT_FOUND);
         }
         var updateOps = CosmosPatchOperations.create();
-        if(house.getName() != null)
-            updateOps.replace("/name", house.getName());
-        if(house.getDescription() != null)
-            updateOps.replace("/description", house.getDescription());
-        updateOps.replace("/price", house.getPrice());
-        updateOps.replace("/promotionPrice", house.getPromotionPrice());
+        var nameToUpdate = house.getName();
+        var descriptionToUpdate = house.getDescription();
+        var priceToUpdate = house.getPrice();
+        var promotionPriceToUpdate = house.getPromotionPrice();
+
+        if(nameToUpdate != null)
+            updateOps.replace("/name", nameToUpdate);
+        if(descriptionToUpdate != null)
+            updateOps.replace("/description", descriptionToUpdate);
+        if (priceToUpdate > 0 && priceToUpdate > promotionPriceToUpdate)
+            updateOps.replace("/price", priceToUpdate);
+        if (promotionPriceToUpdate > 0 && promotionPriceToUpdate < priceToUpdate)
+            updateOps.replace("/promotionPrice", house.getPromotionPrice());
         updateOps.replace("/isAvailable", house.isAvailable());
 
         return Result.ok(houses.updateHouse(houseId, updateOps).getItem().toHouse());
@@ -187,7 +183,7 @@ public class DatabaseLayer {
 
 
     public Result<List<House>> listUserHouses(String ownerId) {
-        if(ownerId == null){
+        if(ownerId == null || !users.hasUser(ownerId)){
             return Result.error(Response.Status.BAD_REQUEST);
         }
         return Result.ok(houses.getHousesByOwner(ownerId).stream().map(HouseDAO::toHouse).toList());

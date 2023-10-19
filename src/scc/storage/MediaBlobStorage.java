@@ -2,7 +2,9 @@ package scc.storage;
 
 import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobContainerClient;
+import scc.server.resources.MediaResource.BlobType;
 import scc.utils.Hash;
+import scc.utils.Result;
 
 public class MediaBlobStorage {
     private final BlobContainerClient userBlobContainerClient;
@@ -11,6 +13,13 @@ public class MediaBlobStorage {
     public MediaBlobStorage(BlobContainerClient userBlobContainerClient, BlobContainerClient houseBlobContainerClient) {
         this.userBlobContainerClient = userBlobContainerClient;
         this.houseBlobContainerClient = houseBlobContainerClient;
+    }
+
+    public boolean exists(String id, BlobType type){
+        return switch (type) {
+            case USER -> userBlobContainerClient.getBlobClient(id).exists();
+            case HOUSE -> houseBlobContainerClient.getBlobClient(id).exists();
+        };
     }
 
     public String uploadUserPhoto(byte[] contents){
