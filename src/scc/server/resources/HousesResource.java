@@ -73,7 +73,7 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public List<House> listHouseQuestions(String houseId) {
+    public List<Question> listHouseQuestions(String houseId) {
         return super.getResult(() -> db.listHouseQuestions(houseId));
     }
 

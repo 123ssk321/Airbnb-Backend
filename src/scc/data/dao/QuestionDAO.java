@@ -23,7 +23,6 @@ public class QuestionDAO {
         this.message = message;
         this.reply = reply;
     }
-
     public String get_rid() {
         return _rid;
     }
@@ -67,6 +66,10 @@ public class QuestionDAO {
     }
     public void setReply(Reply reply) {
         this.reply = reply;
+    }
+
+    public Question toQuestion(){
+        return new Question(id,userId,message,reply);
     }
     @Override
     public String toString() {

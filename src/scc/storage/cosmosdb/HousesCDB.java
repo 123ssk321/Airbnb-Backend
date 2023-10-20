@@ -13,7 +13,6 @@ public class HousesCDB {
 
     public HousesCDB(CosmosContainer container) {
         this.container = container;
-
     }
 
     public CosmosItemResponse<HouseDAO> putHouse(HouseDAO house){
@@ -29,7 +28,7 @@ public class HousesCDB {
             var houseIt = houses.iterator();
             return houseIt.hasNext()? houseIt.next() : null;
         } catch (Exception e){
-            Log.info("Execption caught:" + e);
+            Log.info("Exception caught:" + e);
             return null;
         }
 
@@ -37,6 +36,11 @@ public class HousesCDB {
 
     public boolean hasHouse(String houseId){
         return this.getHouse(houseId) != null;
+    }
+
+    public boolean isOwner(String userId, String houseId){
+        var house = this.getHouse(houseId);
+        return userId.equals(house.getOwnerId());
     }
 
     public CosmosItemResponse<Object> deleteHouseById(String houseId) {

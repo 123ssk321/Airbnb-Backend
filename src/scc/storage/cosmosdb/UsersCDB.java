@@ -26,7 +26,7 @@ public class UsersCDB {
             var res = userIt.hasNext();
             return res? userIt.next() : null;
         } catch (Exception ce){
-            Log.info("Execption caught:" + ce);
+            Log.info("Exception caught:" + ce);
             return null;
         }
     }

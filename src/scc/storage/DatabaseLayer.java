@@ -243,17 +243,50 @@ public class DatabaseLayer {
 
 
     public Result<String> createQuestion(String houseId, Question question) {
-        return null;
+        if(houseId == null || question == null || question.getUserId() == null || question.getMessage() == null
+        || question.getReply() != null){
+            return Result.error(Response.Status.BAD_REQUEST);
+        }
+        if(!houses.hasHouse(houseId)){
+            return Result.error(Response.Status.NOT_FOUND);
+        }
+
+        question.setId(UUID.randomUUID().toString());
+        var questionDao = new QuestionDAO(question);
+        questionDao.setHouseId(houseId);
+        return Result.ok(questions.putQuestion(questionDao).getItem().getId());
     }
 
 
-    public Result<Void> createReply(String houseId, String questionId, Reply reply) {
-        return null;
+    public Result<String> createReply(String houseId, String questionId, Reply reply) {
+        if (houseId == null || questionId == null || reply == null || reply.getMessage() == null
+                || reply.getUserId() == null) {
+            return Result.error(Response.Status.BAD_REQUEST);
+        }
+        if(!houses.hasHouse(houseId) || questions.hasQuestion(questionId)){
+            return Result.error(Response.Status.NOT_FOUND);
+        }
+        if(!houses.isOwner(houseId, reply.getUserId())){
+            return Result.error((Response.Status.FORBIDDEN));
+        }
+
+        var updateOps = CosmosPatchOperations.create();
+        updateOps.replace("/reply", reply);
+
+        questions.addReply(questionId, updateOps);
+        return Result.ok("The reply was created");
+
     }
 
+    public Result<List<Question>> listHouseQuestions(String houseId) {
+        if (houseId == null) {
+            return Result.error(Response.Status.BAD_REQUEST);
+        }
+        if(!houses.hasHouse(houseId)){
+            return Result.error(Response.Status.NOT_FOUND);
+        }
 
-    public Result<List<House>> listHouseQuestions(String houseId) {
-        return null;
+        return Result.ok(questions.getHouseQuestions(houseId).stream().map(QuestionDAO::toQuestion).toList());
     }
 
 }
