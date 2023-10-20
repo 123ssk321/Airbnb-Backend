@@ -191,17 +191,49 @@ public class DatabaseLayer {
 
 
     public Result<String> createRental(String houseId, Rental rental) {
-        return null;
+        if(houseId == null || rental.getId() == null || rental.getTenantId() == null || rental.getLandlordId() == null
+                || rental.getPeriod() <= 0 ||  rental.getPrice() <= 0
+                || !users.hasUser(rental.getTenantId()) || !users.hasUser(rental.getLandlordId())){
+            return Result.error(Response.Status.BAD_REQUEST);
+        }
+        if (!houses.hasHouse(houseId))
+            return Result.error(Response.Status.NOT_FOUND);
+        // TODO: check if house ownerId equals landlordId
+        var rentalDao = new RentalDAO(rental);
+        rentalDao.setHouseId(houseId);
+        return Result.ok(rentals.putRental(rentalDao).getItem().getId());
     }
 
 
     public Result<Rental> updateRental(String houseId, String rentalId, Rental rental) {
-        return null;
+        if(houseId == null || rentalId == null || rental == null )
+            return Result.error(Response.Status.BAD_REQUEST);
+        if (!houses.hasHouse(houseId))
+            return Result.error(Response.Status.NOT_FOUND);
+
+        var updateOps = CosmosPatchOperations.create();
+        var tenantIdToUpdate = rental.getTenantId();
+        var periodToUpdate = rental.getPeriod();
+        var priceToUpdate = rental.getPrice();
+
+        if(tenantIdToUpdate != null){
+            if(!users.hasUser(tenantIdToUpdate))
+                return Result.error(Response.Status.BAD_REQUEST);
+            updateOps.replace("/tenantId", tenantIdToUpdate);
+        }
+        if(periodToUpdate > 0)
+            updateOps.replace("/period", periodToUpdate);
+        if (priceToUpdate > 0)
+            updateOps.replace("/price", priceToUpdate);
+
+        return Result.ok(rentals.updateRental(rentalId, updateOps).getItem().toRental());
     }
 
 
     public Result<List<Rental>> listRentals(String houseId) {
-        return null;
+        if(houseId == null || !houses.hasHouse(houseId))
+            return Result.error(Response.Status.BAD_REQUEST);
+        return Result.ok(rentals.getRentalsByHouse(houseId).stream().map(RentalDAO::toRental).toList());
     }
 
 

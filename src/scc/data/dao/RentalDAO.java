@@ -77,7 +77,7 @@ public class RentalDAO {
         this.price = price;
     }
     public Rental toRental() {
-        return new Rental(houseId, tenantId, landlordId, period, price);
+        return new Rental(id, tenantId, landlordId, period, price);
     }
     @Override
     public String toString() {
