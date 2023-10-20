@@ -68,12 +68,12 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public void createReply(String houseId, String questionId, Reply reply) {
-        super.getResult(() -> db.createReply(houseId, questionId, reply));
+    public String createReply(String houseId, String questionId, Reply reply) {
+        return super.getResult(() -> db.createReply(houseId, questionId, reply));
     }
 
     @Override
-    public List<House> listHouseQuestions(String houseId) {
+    public List<Question> listHouseQuestions(String houseId) {
         return super.getResult(() -> db.listHouseQuestions(houseId));
     }
 
