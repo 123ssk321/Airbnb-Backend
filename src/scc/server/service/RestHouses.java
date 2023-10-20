@@ -174,6 +174,6 @@ public interface RestHouses {
     @GET
     @Path("{houseId}/question")
     @Produces(MediaType.APPLICATION_JSON)
-    List<House> listHouseQuestions(@PathParam("houseId") String houseId);
+    List<Question> listHouseQuestions(@PathParam("houseId") String houseId);
 
 }
