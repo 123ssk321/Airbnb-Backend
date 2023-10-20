@@ -54,4 +54,9 @@ public class QuestionsCDB {
         }
 
     }
+
+    public boolean hasReply(String questionId) {
+        var question = getQuestion(questionId);
+        return question.getReply() != null;
+    }
 }

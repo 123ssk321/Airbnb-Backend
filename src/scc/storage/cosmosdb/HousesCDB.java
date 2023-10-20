@@ -38,7 +38,7 @@ public class HousesCDB {
         return this.getHouse(houseId) != null;
     }
 
-    public boolean isOwner(String userId, String houseId){
+    public boolean isOwner(String houseId, String userId){
         var house = this.getHouse(houseId);
         return userId.equals(house.getOwnerId());
     }

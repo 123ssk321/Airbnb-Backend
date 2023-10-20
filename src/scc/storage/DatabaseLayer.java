@@ -250,6 +250,8 @@ public class DatabaseLayer {
         if(!houses.hasHouse(houseId)){
             return Result.error(Response.Status.NOT_FOUND);
         }
+        if (!users.hasUser(question.getUserId()))
+            return Result.error(Response.Status.BAD_REQUEST);
 
         question.setId(UUID.randomUUID().toString());
         var questionDao = new QuestionDAO(question);
@@ -263,10 +265,10 @@ public class DatabaseLayer {
                 || reply.getUserId() == null) {
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        if(!houses.hasHouse(houseId) || questions.hasQuestion(questionId)){
+        if(!houses.hasHouse(houseId) || !questions.hasQuestion(questionId)){
             return Result.error(Response.Status.NOT_FOUND);
         }
-        if(!houses.isOwner(houseId, reply.getUserId())){
+        if(!houses.isOwner(houseId, reply.getUserId()) || questions.hasReply(questionId)){
             return Result.error((Response.Status.FORBIDDEN));
         }
 
