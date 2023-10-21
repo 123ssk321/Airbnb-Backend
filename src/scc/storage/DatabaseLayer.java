@@ -2,11 +2,8 @@ package scc.storage;
 
 import com.azure.cosmos.CosmosClient;
 import com.azure.cosmos.models.CosmosPatchOperations;
-import com.azure.resourcemanager.monitor.models.SyslogDataSource;
 import com.azure.storage.blob.BlobContainerClient;
 import jakarta.ws.rs.core.Response;
-import org.glassfish.jaxb.runtime.v2.runtime.output.SAXOutput;
-import scc.server.resources.MediaResource;
 import scc.utils.Result;
 import java.util.List;
 import java.util.UUID;
@@ -45,8 +42,7 @@ public class DatabaseLayer {
 
     public Result<String> createUser(User user) {
         if(user == null || user.getId() == null || user.getName() == null || user.getPwd() == null
-                || user.getPhotoId() == null || !media.exists(user.getPhotoId(), BlobType.USER)
-                || user.getHouseIds() == null){
+                || user.getPhotoId() == null || !media.exists(user.getPhotoId(), BlobType.USER)){
             return Result.error(Response.Status.BAD_REQUEST);
         }
         if(users.hasUser(user.getId()))
@@ -83,12 +79,20 @@ public class DatabaseLayer {
         }
 
         var updateOps = CosmosPatchOperations.create();
-        if(user.getName() != null)
-            updateOps.replace("/name", user.getName());
-        if(user.getPwd() != null)
-            updateOps.replace("/pwd", user.getPwd());
-        if(user.getPhotoId() != null)
-            updateOps.replace("/photoId", user.getPhotoId());
+        var nameToUpdate = user.getName();
+        var pwdToUpdate = user.getPwd();
+        var photoIdToUpdate = user.getPhotoId();
+        var houseIdsToUpdate = user.getHouseIds();
+        if(nameToUpdate != null)
+            updateOps.replace("/name", nameToUpdate);
+        if(pwdToUpdate != null)
+            updateOps.replace("/pwd", pwdToUpdate);
+        if(photoIdToUpdate != null)
+            updateOps.replace("/photoId", photoIdToUpdate);
+        if(houseIdsToUpdate != null && houseIdsToUpdate.length > 1) {
+            for (String houseId : houseIdsToUpdate)
+                updateOps.add("/houseIds", houseId);
+        }
 
         return Result.ok(users.updateUser(userId, updateOps).getItem().toUser());
     }
@@ -121,8 +125,8 @@ public class DatabaseLayer {
 
     public Result<String> createHouse(House house) {
         if(house == null || house.getName() == null || house.getLocation() == null || house.getDescription() == null
-                || house.getPhotoIds() == null || house.getPhotoIds().length < 1
-                || !house.isAvailable() || house.getPrice() <= 0 || house.getPromotionPrice() <= 0) {
+                || house.getPhotoIds() == null || house.getPhotoIds().length == 0
+                || house.getPeriods() == null || house.getPeriods().length == 0) {
             return Result.error(Response.Status.BAD_REQUEST);
         }
         for (String photoId : house.getPhotoIds()){
@@ -157,28 +161,25 @@ public class DatabaseLayer {
         var updateOps = CosmosPatchOperations.create();
         var nameToUpdate = house.getName();
         var descriptionToUpdate = house.getDescription();
-        var priceToUpdate = house.getPrice();
-        var promotionPriceToUpdate = house.getPromotionPrice();
+        var periodsToUpdate = house.getPeriods();
 
         if(nameToUpdate != null)
             updateOps.replace("/name", nameToUpdate);
         if(descriptionToUpdate != null)
             updateOps.replace("/description", descriptionToUpdate);
-        if (priceToUpdate > 0 && priceToUpdate > promotionPriceToUpdate)
-            updateOps.replace("/price", priceToUpdate);
-        if (promotionPriceToUpdate > 0 && promotionPriceToUpdate < priceToUpdate)
-            updateOps.replace("/promotionPrice", house.getPromotionPrice());
-        updateOps.replace("/isAvailable", house.isAvailable());
+        if(periodsToUpdate != null){
+            // TODO: update periods
+        }
 
         return Result.ok(houses.updateHouse(houseId, updateOps).getItem().toHouse());
     }
 
 
-    public Result<List<House>> listHousesByLocation(String location) {
+    public Result<List<House>> searchHouses(String location, String startDate, String endDate) {
         if(location == null){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        return Result.ok(houses.getHousesByLocation(location).stream().map(HouseDAO::toHouse).toList());
+        return Result.ok(houses.searchHouses(location, startDate, endDate).stream().map(HouseDAO::toHouse).toList());
     }
 
 
@@ -192,13 +193,15 @@ public class DatabaseLayer {
 
     public Result<String> createRental(String houseId, Rental rental) {
         if(houseId == null || rental.getId() == null || rental.getTenantId() == null || rental.getLandlordId() == null
-                || rental.getPeriod() <= 0 ||  rental.getPrice() <= 0
+                || rental.getPeriod() == null
                 || !users.hasUser(rental.getTenantId()) || !users.hasUser(rental.getLandlordId())){
             return Result.error(Response.Status.BAD_REQUEST);
         }
         if (!houses.hasHouse(houseId))
             return Result.error(Response.Status.NOT_FOUND);
-        // TODO: check if house ownerId equals landlordId
+        if(!houses.isOwner(houseId, rental.getLandlordId()))
+            return Result.error(Response.Status.BAD_REQUEST);
+
         var rentalDao = new RentalDAO(rental);
         rentalDao.setHouseId(houseId);
         return Result.ok(rentals.putRental(rentalDao).getItem().getId());
@@ -214,17 +217,14 @@ public class DatabaseLayer {
         var updateOps = CosmosPatchOperations.create();
         var tenantIdToUpdate = rental.getTenantId();
         var periodToUpdate = rental.getPeriod();
-        var priceToUpdate = rental.getPrice();
 
         if(tenantIdToUpdate != null){
             if(!users.hasUser(tenantIdToUpdate))
                 return Result.error(Response.Status.BAD_REQUEST);
             updateOps.replace("/tenantId", tenantIdToUpdate);
         }
-        if(periodToUpdate > 0)
+        if(periodToUpdate != null)
             updateOps.replace("/period", periodToUpdate);
-        if (priceToUpdate > 0)
-            updateOps.replace("/price", priceToUpdate);
 
         return Result.ok(rentals.updateRental(rentalId, updateOps).getItem().toRental());
     }

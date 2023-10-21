@@ -33,8 +33,8 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public List<House> listHousesByLocation(String location) {
-        return super.getResult(() -> db.listHousesByLocation(location));
+    public List<House> searchHouses(String location, String startDate, String endDate) {
+        return super.getResult(() -> db.searchHouses(location, startDate, endDate));
     }
 
     @Override

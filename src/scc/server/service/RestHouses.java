@@ -10,6 +10,8 @@ import jakarta.ws.rs.core.MediaType;
 public interface RestHouses {
     String PATH = "/house";
     String LOCATION = "location";
+    String START_DATE= "starDate";
+    String END_DATE= "endDate";
 
     /**
      * Creates a new house.
@@ -53,15 +55,21 @@ public interface RestHouses {
     House updateHouse(@PathParam("houseId") String houseId, House house);
 
     /**
-     * Returns the list of available houses for a given location.
+     * Returns the list of available houses for a given location and a given period if startDate and endDate
+     * are given.
+     * Else returns only the list of available houses for a given location
      *
-     * @param location substring to search
+     * @param location location to search
+     * @param startDate starting date of the period
+     * @param startDate ending date of the period
      * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
      *         400 otherwise.
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    List<House> listHousesByLocation(@QueryParam(LOCATION) String location);
+    List<House> searchHouses(@QueryParam(LOCATION) String location,
+                             @QueryParam(START_DATE) String startDate,
+                             @QueryParam(END_DATE) String endDate);
 
     /**
      * Returns the list of houses of a given user.

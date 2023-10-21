@@ -10,7 +10,7 @@ import java.util.Arrays;
 public class UserDAO {
 	private String _rid;
 	private String _ts;
-	private String id;
+	private String id; // TODO: change id to nickname
 	private String name;
 	private String pwd;
 	private String photoId;

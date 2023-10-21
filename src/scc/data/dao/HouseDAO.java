@@ -1,6 +1,7 @@
 package scc.data.dao;
 
 import scc.data.dto.House;
+import scc.data.dto.Period;
 
 import java.util.Arrays;
 
@@ -13,15 +14,14 @@ public class HouseDAO {
     private String location;
     private String description;
     private String[] photoIds;
-    private boolean isAvailable;
-    private float price; // per day
-    private float promotionPrice; // per day
+    private Period[] periods;
+
 
     public HouseDAO() {}
 
-    public HouseDAO(House h) {this(h.getId(), h.getName(), h.getOwnerId(), h.getLocation(), h.getDescription(), h.getPhotoIds(), h.isAvailable(), h.getPrice(), h.getPromotionPrice());}
+    public HouseDAO(House h) {this(h.getId(), h.getName(), h.getOwnerId(), h.getLocation(), h.getDescription(), h.getPhotoIds(), h.getPeriods());}
 
-    public HouseDAO(String id, String name, String ownerId, String location, String description, String[] photoIds, boolean isAvailable, float price, float promotionPrice) {
+    public HouseDAO(String id, String name, String ownerId, String location, String description, String[] photoIds, Period[] periods) {
         super();
         this.id = id;
         this.name = name;
@@ -29,9 +29,7 @@ public class HouseDAO {
         this.location = location;
         this.description = description;
         this.photoIds = photoIds;
-        this.isAvailable = isAvailable;
-        this.price = price;
-        this.promotionPrice = promotionPrice;
+        this.periods = periods;
     }
 
     public String get_rid() {
@@ -85,27 +83,16 @@ public class HouseDAO {
     public void setPhotoIds(String[] photoIds) {
         this.photoIds = photoIds;
     }
-    public boolean isAvailable() {
-        return isAvailable;
+    public Period[] getPeriods() {
+        return periods;
     }
-    public void setAvailable(boolean available) {
-        this.isAvailable = available;
+    public void setPeriods(Period[] periods) {
+        this.periods = periods;
     }
-    public float getPrice() {
-        return price;
-    }
-    public void setPrice(float price) {
-        this.price = price;
-    }
-    public float getPromotionPrice() {
-        return promotionPrice;
-    }
-    public void setPromotionPrice(float promotionPrice) {
-        this.promotionPrice = promotionPrice;
-    }
+
     public House toHouse() {
         return new House(id, name, ownerId, location, description, photoIds == null? null : Arrays.copyOf(photoIds, photoIds.length),
-                isAvailable, price, promotionPrice);
+                periods == null? null : Arrays.copyOf(periods, periods.length));
     }
     @Override
     public String toString() {
@@ -116,9 +103,7 @@ public class HouseDAO {
                 ", location=" + location +
                 ", description='" + description +
                 ", photos=" + Arrays.toString(photoIds) +
-                ", available=" + isAvailable +
-                ", price=" + price +
-                ", promotionPrice=" + promotionPrice +
+                ", periods=" + Arrays.toString(periods) +
                 ']';
     }
 

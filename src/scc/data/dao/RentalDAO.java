@@ -1,5 +1,6 @@
 package scc.data.dao;
 
+import scc.data.dto.Period;
 import scc.data.dto.Rental;
 
 public class RentalDAO {
@@ -9,21 +10,19 @@ public class RentalDAO {
     private String houseId;
     private String tenantId;
     private String landlordId;
-    private int period;
-    private float price;
+    private Period period;
 
     public RentalDAO() {}
 
-    public RentalDAO(Rental r) {this(r.getId(), null, r.getTenantId(), r.getLandlordId(), r.getPeriod(), r.getPrice());}
+    public RentalDAO(Rental r) {this(r.getId(), null, r.getTenantId(), r.getLandlordId(), r.getPeriod());}
 
-    public RentalDAO(String id, String houseId, String tenantId, String landlordId, int period, float price) {
+    public RentalDAO(String id, String houseId, String tenantId, String landlordId, Period period) {
         super();
         this.id = id;
         this.houseId = houseId;
         this.tenantId = tenantId;
         this.landlordId = landlordId;
         this.period = period;
-        this.price = price;
     }
 
     public String get_rid() {
@@ -64,20 +63,14 @@ public class RentalDAO {
     public void setLandlordId(String landlordId) {
         this.landlordId = landlordId;
     }
-    public int getPeriod() {
+    public Period getPeriod() {
         return period;
     }
-    public void setPeriod(int period) {
+    public void setPeriod(Period period) {
         this.period = period;
     }
-    public float getPrice() {
-        return price;
-    }
-    public void setPrice(float price) {
-        this.price = price;
-    }
     public Rental toRental() {
-        return new Rental(id, tenantId, landlordId, period, price);
+        return new Rental(id, tenantId, landlordId, period);
     }
     @Override
     public String toString() {
@@ -87,7 +80,6 @@ public class RentalDAO {
                 ", tenant=" + tenantId +
                 ", landlord=" + landlordId +
                 ", period=" + period +
-                ", price=" + price +
                 ']';
     }
 

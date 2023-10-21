@@ -57,9 +57,29 @@ public class HousesCDB {
         return container.patchItem(houseId, key, updateOps, HouseDAO.class);
     }
 
-    public CosmosPagedIterable<HouseDAO> getHousesByLocation(String location) {
+    public CosmosPagedIterable<HouseDAO> searchHouses(String location, String startDate, String endDate) {
+        if(startDate == null && endDate == null){
+            return container.queryItems(
+                    "SELECT * FROM houses WHERE houses.location=\"" + location + "\"",
+                    new CosmosQueryRequestOptions(),
+                    HouseDAO.class);
+        }
         return container.queryItems(
-                "SELECT * FROM houses WHERE houses.location=\"" + location + "\"",
+                "SELECT DISTINCT houses.id, houses.name, houses.ownerId, houses.location, houses.description, houses.photoIds, houses.periods " +
+                        "FROM houses " +
+                        "JOIN p IN houses.periods " +
+                        "WHERE houses.location=\"" + location + "\" AND p.startDate >= \"" + startDate + "\" AND p.endDate <= \"" + endDate + "\"",
+                new CosmosQueryRequestOptions(),
+                HouseDAO.class);
+    }
+
+    public CosmosPagedIterable<HouseDAO> getDiscountedHouses() {
+        // TODO: complete query to return discounted houses in the near future
+        return container.queryItems(
+                "SELECT DISTINCT houses.id, houses.name, houses.ownerId, houses.location, houses.description, houses.photoIds, houses.periods " +
+                        "FROM houses " +
+                        "JOIN p IN houses.periods " +
+                        "WHERE p.price = p.promotionPrice AND ",
                 new CosmosQueryRequestOptions(),
                 HouseDAO.class);
     }

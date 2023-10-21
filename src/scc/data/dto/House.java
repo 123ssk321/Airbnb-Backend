@@ -11,13 +11,10 @@ public class House {
     private String ownerId;
     private String location;
     private String description;
-    private String[] photoIds; // list or array?
-    @JsonProperty("isAvailable")
-    private boolean isAvailable;
-    private float price; //per day
-    private float promotionPrice; //per day
+    private String[] photoIds;
+    private Period[] periods;
 
-    public House(String id, String name, String ownerId, String location, String description, String[] photoIds, boolean isAvailable, float price, float promotionPrice) {
+    public House(String id, String name, String ownerId, String location, String description, String[] photoIds, Period[] periods) {
         super();
         this.id = id;
         this.name = name;
@@ -25,9 +22,7 @@ public class House {
         this.location = location;
         this.description = description;
         this.photoIds = photoIds;
-        this.isAvailable = isAvailable;
-        this.price = price;
-        this.promotionPrice = promotionPrice;
+        this.periods = periods;
     }
 
     public House(){}
@@ -68,23 +63,11 @@ public class House {
     public void setPhotoIds(String[] photoIds) {
         this.photoIds = photoIds;
     }
-    public boolean isAvailable() {
-        return isAvailable;
+    public Period[] getPeriods() {
+        return periods;
     }
-    public void setAvailable(boolean available) {
-        this.isAvailable = available;
-    }
-    public float getPrice() {
-        return price;
-    }
-    public void setPrice(float price) {
-        this.price = price;
-    }
-    public float getPromotionPrice() {
-        return promotionPrice;
-    }
-    public void setPromotionPrice(float promotionPrice) {
-        this.promotionPrice = promotionPrice;
+    public void setPeriods(Period[] periods) {
+        this.periods = periods;
     }
 
     @Override
@@ -95,9 +78,7 @@ public class House {
                 ", location=" + location +
                 ", description=" + description +
                 ", photos=" + Arrays.toString(photoIds) +
-                ", available=" + isAvailable +
-                ", price=" + price +
-                ", promotionPrice=" + promotionPrice +
+                ", periods=" + Arrays.toString(periods) +
                 ']';
     }
 
