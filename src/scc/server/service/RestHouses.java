@@ -150,18 +150,18 @@ public interface RestHouses {
     /**
      * Creates a reply for a question of a given house.
      *
-     * @param houseId the ID of the house.
+     * @param houseId    the ID of the house.
      * @param questionId the ID of the question.
-     * @param reply the Reply to be created.
+     * @param reply      the Reply to be created.
      * @return 200 the reply was created.
-     *         403 if the author of the reply is not the owner of the house.
-     *         404 if the houseId does not exist or the questionId does not exist.
-     *         400 otherwise.
+     * 403 if the author of the reply is not the owner of the house.
+     * 404 if the houseId does not exist or the questionId does not exist.
+     * 400 otherwise.
      */
     @POST
     @Path("/{houseId}/question/{questionId}")
     @Consumes(MediaType.APPLICATION_JSON)
-    void createReply(@PathParam("houseId") String houseId, @PathParam("questionId") String questionId, Reply reply);
+    String createReply(@PathParam("houseId") String houseId, @PathParam("questionId") String questionId, Reply reply);
 
     /**
      * Returns the list of questions for a given house.
