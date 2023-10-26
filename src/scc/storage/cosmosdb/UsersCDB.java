@@ -1,7 +1,6 @@
 package scc.storage.cosmosdb;
 
 import com.azure.cosmos.CosmosContainer;
-import com.azure.cosmos.CosmosException;
 import com.azure.cosmos.models.*;
 import com.azure.cosmos.util.CosmosPagedIterable;
 import scc.data.dao.UserDAO;
@@ -31,16 +30,8 @@ public class UsersCDB {
         }
     }
 
-    public CosmosPagedIterable<UserDAO> getUserById(String id) {
-        return container.queryItems("SELECT * FROM users WHERE users.id=\"" + id + "\"", new CosmosQueryRequestOptions(), UserDAO.class);
-    }
-
     public CosmosPagedIterable<UserDAO> getUsers() {
         return container.queryItems("SELECT * FROM users ", new CosmosQueryRequestOptions(), UserDAO.class);
-    }
-
-    public boolean hasUser(String userId){
-        return this.getUser(userId) != null;
     }
 
     public CosmosItemResponse<UserDAO> updateUser(String userId, CosmosPatchOperations updateOps){
