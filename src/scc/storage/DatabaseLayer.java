@@ -4,7 +4,6 @@ import com.azure.cosmos.CosmosClient;
 import com.azure.cosmos.models.CosmosPatchOperations;
 import com.azure.storage.blob.BlobContainerClient;
 import jakarta.ws.rs.core.Response;
-import redis.clients.jedis.JedisPool;
 import scc.cache.RedisCache;
 import scc.utils.Result;
 import java.util.List;
@@ -26,6 +25,8 @@ public class DatabaseLayer {
     private static final Logger Log = Logger.getLogger(DatabaseLayer.class.getName());
 
     private final RedisCache cache;
+    private static final String USER_REDIS_KEY = "user:";
+    private static final String HOUSES_REDIS_KEY = "house:";
 
     public DatabaseLayer(CosmosClient cClient,
                          String cosmosdbDatabase,
@@ -47,21 +48,21 @@ public class DatabaseLayer {
     }
 
     private UserDAO getUser(String userId){
-        var user = cache.getUser(userId);
+        var user = cache.get(USER_REDIS_KEY + userId, UserDAO.class);
         if(user == null){
             user = users.getUser(userId);
-            cache.putUser(user);
+            if(user !=null )
+                cache.set(USER_REDIS_KEY + userId, user);
         }
         return user;
     }
-    private boolean hasUser(String userId){
-        return this.getUser(userId) != null;
-    }
+    private boolean hasUser(String userId){return this.getUser(userId) != null;}
     private HouseDAO getHouse(String houseId){
-        var house = cache.getHouse(houseId);
+        var house = cache.get(HOUSES_REDIS_KEY + houseId, HouseDAO.class);
         if(house == null){
             house = houses.getHouse(houseId);
-            cache.putHouse(house);
+            if(house != null)
+                cache.set(HOUSES_REDIS_KEY + houseId, house);
         }
         return house;
     }
@@ -94,7 +95,7 @@ public class DatabaseLayer {
         if(!user.getPwd().equals(password)){
             return Result.error(Response.Status.FORBIDDEN);
         }
-        cache.deleteUser(userId);
+        cache.delete(USER_REDIS_KEY + userId);
         return Result.ok(((UserDAO) users.delUserById(userId).getItem()).toUser());
     }
 
@@ -128,7 +129,7 @@ public class DatabaseLayer {
         }
 
         var userDAO  = users.updateUser(userId, updateOps).getItem();
-        cache.putUser(userDAO);
+        cache.set(USER_REDIS_KEY + userId, userDAO);
 
         return Result.ok(userDAO.toUser());
     }
@@ -184,7 +185,7 @@ public class DatabaseLayer {
         if(!this.hasHouse(houseId)){
             return Result.error(Response.Status.NOT_FOUND);
         }
-        cache.deleteHouse(houseId);
+        cache.delete(HOUSES_REDIS_KEY + houseId);
         return Result.ok(((HouseDAO) houses.deleteHouseById(houseId).getItem()).toHouse());
     }
 
@@ -208,7 +209,7 @@ public class DatabaseLayer {
             // TODO: update periods
         }
         var houseDAO = houses.updateHouse(houseId, updateOps).getItem();
-        cache.putHouse(houseDAO);
+        cache.set(HOUSES_REDIS_KEY + houseId, houseDAO);
         return Result.ok(houseDAO.toHouse());
     }
 

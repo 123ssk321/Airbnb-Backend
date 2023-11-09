@@ -16,8 +16,9 @@ public class AzureProperties
 	public static final String QUESTION_COSMOSDB_CONTAINER_NAME = "questions";
 	public static final String USER_BLOB_CONTAINER_NAME = "users";
 	public static final String HOUSE_BLOB_CONTAINER_NAME = "houses";
-
 	public static final String PROPS_FILE = "azurekeys-westeurope.props";
+	public static final String REDISH_HOST_NAME = "REDIS_URL";
+	public static final String REDIS_KEY = "REDIS_KEY";
 	private static Properties props;
 	
 	public static synchronized Properties getProperties() {
