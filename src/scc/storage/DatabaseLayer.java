@@ -4,6 +4,7 @@ import com.azure.cosmos.CosmosClient;
 import com.azure.cosmos.models.CosmosPatchOperations;
 import com.azure.storage.blob.BlobContainerClient;
 import jakarta.ws.rs.core.Response;
+import scc.cache.RedisCache;
 import scc.utils.Result;
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +24,10 @@ public class DatabaseLayer {
     private final QuestionsCDB questions;
     private static final Logger Log = Logger.getLogger(DatabaseLayer.class.getName());
 
+    private final RedisCache cache;
+    private static final String USER_REDIS_KEY = "user:";
+    private static final String HOUSES_REDIS_KEY = "house:";
+
     public DatabaseLayer(CosmosClient cClient,
                          String cosmosdbDatabase,
                          String userCosmosDBContainerName,
@@ -33,6 +38,8 @@ public class DatabaseLayer {
                          BlobContainerClient houseBlobContainer){
         var db = cClient.getDatabase(cosmosdbDatabase);
 
+        cache = new RedisCache();
+
         users = new UsersCDB(db.getContainer(userCosmosDBContainerName));
         houses = new HousesCDB(db.getContainer(houseCosmosDBContainerName));
         rentals = new RentalsCDB(db.getContainer(rentalCosmosDBContainerName));
@@ -40,12 +47,38 @@ public class DatabaseLayer {
         media = new MediaBlobStorage(userBlobContainer, houseBlobContainer);
     }
 
+    private UserDAO getUser(String userId){
+        var user = cache.get(USER_REDIS_KEY + userId, UserDAO.class);
+        if(user == null){
+            user = users.getUser(userId);
+            if(user !=null )
+                cache.set(USER_REDIS_KEY + userId, user);
+        }
+        return user;
+    }
+    private boolean hasUser(String userId){return this.getUser(userId) != null;}
+    private HouseDAO getHouse(String houseId){
+        var house = cache.get(HOUSES_REDIS_KEY + houseId, HouseDAO.class);
+        if(house == null){
+            house = houses.getHouse(houseId);
+            if(house != null)
+                cache.set(HOUSES_REDIS_KEY + houseId, house);
+        }
+        return house;
+    }
+    public boolean hasHouse(String houseId){return this.getHouse(houseId) != null;}
+
+    private boolean isOwner(String houseId, String userId){
+        var house = this.getHouse(houseId);
+        return userId.equals(house.getOwnerId());
+    }
+
     public Result<String> createUser(User user) {
         if(user == null || user.getId() == null || user.getName() == null || user.getPwd() == null
                 || user.getPhotoId() == null || !media.exists(user.getPhotoId(), BlobType.USER)){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        if(users.hasUser(user.getId()))
+        if(this.hasUser(user.getId()))
             return Result.error(Response.Status.CONFLICT);
 
         return Result.ok(users.putUser(new UserDAO(user)).getItem().getId());
@@ -55,13 +88,14 @@ public class DatabaseLayer {
         if(userId == null || password == null){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        UserDAO user = users.getUser(userId);
+        UserDAO user = this.getUser(userId);
         if(user == null){
             return Result.error(Response.Status.NOT_FOUND);
         }
         if(!user.getPwd().equals(password)){
             return Result.error(Response.Status.FORBIDDEN);
         }
+        cache.delete(USER_REDIS_KEY + userId);
         return Result.ok(((UserDAO) users.delUserById(userId).getItem()).toUser());
     }
 
@@ -70,7 +104,7 @@ public class DatabaseLayer {
         if(userId == null || password == null || user == null){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        UserDAO dbUser = users.getUser(userId);
+        UserDAO dbUser = this.getUser(userId);
         if(dbUser == null){
             return Result.error(Response.Status.NOT_FOUND);
         }
@@ -94,7 +128,10 @@ public class DatabaseLayer {
                 updateOps.add("/houseIds", houseId);
         }
 
-        return Result.ok(users.updateUser(userId, updateOps).getItem().toUser());
+        var userDAO  = users.updateUser(userId, updateOps).getItem();
+        cache.set(USER_REDIS_KEY + userId, userDAO);
+
+        return Result.ok(userDAO.toUser());
     }
 
 
@@ -133,7 +170,7 @@ public class DatabaseLayer {
             if (!media.exists(photoId, BlobType.HOUSE))
                 return Result.error(Response.Status.BAD_REQUEST);
         }
-        if (!users.hasUser(house.getOwnerId()))
+        if (!this.hasUser(house.getOwnerId()))
             return Result.error(Response.Status.BAD_REQUEST);
 
         house.setId(UUID.randomUUID().toString());
@@ -145,9 +182,10 @@ public class DatabaseLayer {
         if(houseId == null) {
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        if(!houses.hasHouse(houseId)){
+        if(!this.hasHouse(houseId)){
             return Result.error(Response.Status.NOT_FOUND);
         }
+        cache.delete(HOUSES_REDIS_KEY + houseId);
         return Result.ok(((HouseDAO) houses.deleteHouseById(houseId).getItem()).toHouse());
     }
 
@@ -155,7 +193,7 @@ public class DatabaseLayer {
         if(houseId == null || house == null){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        if(!houses.hasHouse(houseId)){
+        if(!this.hasHouse(houseId)){
             return Result.error(Response.Status.NOT_FOUND);
         }
         var updateOps = CosmosPatchOperations.create();
@@ -170,8 +208,9 @@ public class DatabaseLayer {
         if(periodsToUpdate != null){
             // TODO: update periods
         }
-
-        return Result.ok(houses.updateHouse(houseId, updateOps).getItem().toHouse());
+        var houseDAO = houses.updateHouse(houseId, updateOps).getItem();
+        cache.set(HOUSES_REDIS_KEY + houseId, houseDAO);
+        return Result.ok(houseDAO.toHouse());
     }
 
 
@@ -184,7 +223,7 @@ public class DatabaseLayer {
 
 
     public Result<List<House>> listUserHouses(String ownerId) {
-        if(ownerId == null || !users.hasUser(ownerId)){
+        if(ownerId == null || !this.hasUser(ownerId)){
             return Result.error(Response.Status.BAD_REQUEST);
         }
         return Result.ok(houses.getHousesByOwner(ownerId).stream().map(HouseDAO::toHouse).toList());
@@ -194,12 +233,12 @@ public class DatabaseLayer {
     public Result<String> createRental(String houseId, Rental rental) {
         if(houseId == null || rental.getId() == null || rental.getTenantId() == null || rental.getLandlordId() == null
                 || rental.getPeriod() == null
-                || !users.hasUser(rental.getTenantId()) || !users.hasUser(rental.getLandlordId())){
+                || !this.hasUser(rental.getTenantId()) || !this.hasUser(rental.getLandlordId())){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        if (!houses.hasHouse(houseId))
+        if (!this.hasHouse(houseId))
             return Result.error(Response.Status.NOT_FOUND);
-        if(!houses.isOwner(houseId, rental.getLandlordId()))
+        if(!this.isOwner(houseId, rental.getLandlordId()))
             return Result.error(Response.Status.BAD_REQUEST);
 
         var rentalDao = new RentalDAO(rental);
@@ -211,7 +250,7 @@ public class DatabaseLayer {
     public Result<Rental> updateRental(String houseId, String rentalId, Rental rental) {
         if(houseId == null || rentalId == null || rental == null )
             return Result.error(Response.Status.BAD_REQUEST);
-        if (!houses.hasHouse(houseId))
+        if (!this.hasHouse(houseId))
             return Result.error(Response.Status.NOT_FOUND);
 
         var updateOps = CosmosPatchOperations.create();
@@ -219,7 +258,7 @@ public class DatabaseLayer {
         var periodToUpdate = rental.getPeriod();
 
         if(tenantIdToUpdate != null){
-            if(!users.hasUser(tenantIdToUpdate))
+            if(!this.hasUser(tenantIdToUpdate))
                 return Result.error(Response.Status.BAD_REQUEST);
             updateOps.replace("/tenantId", tenantIdToUpdate);
         }
@@ -231,7 +270,7 @@ public class DatabaseLayer {
 
 
     public Result<List<Rental>> listRentals(String houseId) {
-        if(houseId == null || !houses.hasHouse(houseId))
+        if(houseId == null || !this.hasHouse(houseId))
             return Result.error(Response.Status.BAD_REQUEST);
         return Result.ok(rentals.getRentalsByHouse(houseId).stream().map(RentalDAO::toRental).toList());
     }
@@ -247,10 +286,10 @@ public class DatabaseLayer {
         || question.getReply() != null){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        if(!houses.hasHouse(houseId)){
+        if(!this.hasHouse(houseId)){
             return Result.error(Response.Status.NOT_FOUND);
         }
-        if (!users.hasUser(question.getUserId()))
+        if (!this.hasUser(question.getUserId()))
             return Result.error(Response.Status.BAD_REQUEST);
 
         question.setId(UUID.randomUUID().toString());
@@ -265,10 +304,10 @@ public class DatabaseLayer {
                 || reply.getUserId() == null) {
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        if(!houses.hasHouse(houseId) || !questions.hasQuestion(questionId)){
+        if(!this.hasHouse(houseId) || !questions.hasQuestion(questionId)){
             return Result.error(Response.Status.NOT_FOUND);
         }
-        if(!houses.isOwner(houseId, reply.getUserId()) || questions.hasReply(questionId)){
+        if(!this.isOwner(houseId, reply.getUserId()) || questions.hasReply(questionId)){
             return Result.error((Response.Status.FORBIDDEN));
         }
 
@@ -284,7 +323,7 @@ public class DatabaseLayer {
         if (houseId == null) {
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        if(!houses.hasHouse(houseId)){
+        if(!this.hasHouse(houseId)){
             return Result.error(Response.Status.NOT_FOUND);
         }
 

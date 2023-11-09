@@ -34,15 +34,6 @@ public class HousesCDB {
 
     }
 
-    public boolean hasHouse(String houseId){
-        return this.getHouse(houseId) != null;
-    }
-
-    public boolean isOwner(String houseId, String userId){
-        var house = this.getHouse(houseId);
-        return userId.equals(house.getOwnerId());
-    }
-
     public CosmosItemResponse<Object> deleteHouseById(String houseId) {
         PartitionKey key = new PartitionKey(houseId);
         return container.deleteItem(houseId, key, new CosmosItemRequestOptions());
