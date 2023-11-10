@@ -276,8 +276,8 @@ public class DatabaseLayer {
     }
 
 
-    public Result<List<Rental>> listDiscountedRentals() {
-        return null;
+    public Result<List<DiscountedRental>> listDiscountedRentals() {
+        return Result.ok(houses.getDiscountedHouses().stream().toList());
     }
 
 

@@ -1,9 +1,6 @@
 package scc.server.resources;
 
-import scc.data.dto.House;
-import scc.data.dto.Question;
-import scc.data.dto.Rental;
-import scc.data.dto.Reply;
+import scc.data.dto.*;
 import scc.server.service.RestHouses;
 import scc.storage.DatabaseLayer;
 
@@ -58,7 +55,7 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public List<Rental> listDiscountedRentals() {
+    public List<DiscountedRental> listDiscountedRentals() {
         return super.getResult(db::listDiscountedRentals);
     }
 

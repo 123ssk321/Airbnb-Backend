@@ -138,7 +138,7 @@ public interface RestHouses {
     @GET
     @Path("/discount")
     @Produces(MediaType.APPLICATION_JSON)
-    List<Rental> listDiscountedRentals();
+    List<DiscountedRental> listDiscountedRentals();
 
     /**
      * Creates a new question for a given house.
