@@ -40,7 +40,7 @@ public class AzureManagement {
 	static final boolean CREATE_REDIS = true;
 
 	// TODO: change your suffix and other names if you want
-	static final String MY_SUFFIX = "57449"; // Add your suffix here
+	static final String MY_SUFFIX = "57418"; // Add your suffix here
 	
 	static final String AZURE_COSMOSDB_NAME = "scc24" + MY_SUFFIX;	// Cosmos DB account name
 	static final String AZURE_COSMOSDB_DATABASE = "scc24db" + MY_SUFFIX;	// Cosmos DB database name
@@ -366,6 +366,34 @@ public class AzureManagement {
 		synchronized (AzureManagement.class) {
 			Files.write(Paths.get(settingsFilename), cmd.toString().getBytes(), StandardOpenOption.APPEND);
 		}
+		dumpDisableRedisCacheInfo(settingsFilename, appName, functionName, rgName, "TRUE");
+	}
+
+	public synchronized static void dumpDisableRedisCacheInfo(String settingsFilename,
+															  String appName, String functionName,
+															  String rgName, String useCache)throws IOException{
+		StringBuffer cmd = new StringBuffer();
+		if (appName != null) {
+			cmd.append("az functionapp config appsettings set --name ");
+			cmd.append(appName);
+			cmd.append(" --resource-group ");
+			cmd.append(rgName);
+			cmd.append(" --settings \"USE_CACHE=");
+			cmd.append(useCache);
+			cmd.append("\"\n");
+		}
+		if (functionName != null) {
+			cmd.append("az functionapp config appsettings set --name ");
+			cmd.append(appName);
+			cmd.append(" --resource-group ");
+			cmd.append(rgName);
+			cmd.append(" --settings \"USE_CACHE=");
+			cmd.append(useCache);
+			cmd.append("\"\n");
+		}
+		synchronized (AzureManagement.class) {
+			Files.write(Paths.get(settingsFilename), cmd.toString().getBytes(), StandardOpenOption.APPEND);
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -478,7 +506,7 @@ public class AzureManagement {
 							for (int i = 0; i < REGIONS.length; i++) {
 								RedisCache cache = createRedis(azure0, AZURE_RG_REGIONS[i], AZURE_REDIS_NAME[i],
 										REGIONS[i]);
-								dumpRedisCacheInfo(props.get(REGIONS[i].name()), AZURE_PROPS_LOCATIONS[i], 
+								dumpRedisCacheInfo(props.get(REGIONS[i].name()), AZURE_PROPS_LOCATIONS[i],
 										AZURE_SETTINGS_LOCATIONS[i], AZURE_APP_NAME[i], AZURE_FUNCTIONS_NAME[i],
 										AZURE_RG_REGIONS[i], cache);
 							}
@@ -490,6 +518,11 @@ public class AzureManagement {
 					});
 					th.start();
 					threads.add(th);
+				}else {
+					for (int i = 0; i < REGIONS.length; i++) {
+						dumpDisableRedisCacheInfo(AZURE_SETTINGS_LOCATIONS[i], AZURE_APP_NAME[i], AZURE_FUNCTIONS_NAME[i],
+								AZURE_RG_REGIONS[i], "FALSE");
+					}
 				}
 
 			}

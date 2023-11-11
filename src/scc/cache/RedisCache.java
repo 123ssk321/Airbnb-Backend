@@ -10,7 +10,6 @@ import scc.data.dao.UserDAO;
 import scc.mgt.AzureProperties;
 
 public class RedisCache {
-
 	private static JedisPool instance;
 	private ObjectMapper mapper;
 	public RedisCache(){ mapper = new ObjectMapper();}

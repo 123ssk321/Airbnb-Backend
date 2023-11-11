@@ -24,10 +24,6 @@ public class DatabaseLayer implements Database {
     private final QuestionsCDB questions;
     private static final Logger Log = Logger.getLogger(DatabaseLayer.class.getName());
 
-    private final RedisCache cache;
-    private static final String USER_REDIS_KEY = "user:";
-    private static final String HOUSES_REDIS_KEY = "house:";
-
     public DatabaseLayer(CosmosClient cClient,
                          String cosmosdbDatabase,
                          String userCosmosDBContainerName,
@@ -38,8 +34,6 @@ public class DatabaseLayer implements Database {
                          BlobContainerClient houseBlobContainer){
         var db = cClient.getDatabase(cosmosdbDatabase);
 
-        cache = new RedisCache();
-
         users = new UsersCDB(db.getContainer(userCosmosDBContainerName));
         houses = new HousesCDB(db.getContainer(houseCosmosDBContainerName));
         rentals = new RentalsCDB(db.getContainer(rentalCosmosDBContainerName));
@@ -48,23 +42,11 @@ public class DatabaseLayer implements Database {
     }
 
     protected UserDAO getUser(String userId){
-        var user = cache.get(USER_REDIS_KEY + userId, UserDAO.class);
-        if(user == null){
-            user = users.getUser(userId);
-            if(user !=null )
-                cache.set(USER_REDIS_KEY + userId, user);
-        }
-        return user;
+        return users.getUser(userId);
     }
     protected boolean hasUser(String userId){return this.getUser(userId) != null;}
     protected HouseDAO getHouse(String houseId){
-        var house = cache.get(HOUSES_REDIS_KEY + houseId, HouseDAO.class);
-        if(house == null){
-            house = houses.getHouse(houseId);
-            if(house != null)
-                cache.set(HOUSES_REDIS_KEY + houseId, house);
-        }
-        return house;
+        return houses.getHouse(houseId);
     }
     public boolean hasHouse(String houseId){return this.getHouse(houseId) != null;}
 
@@ -95,7 +77,6 @@ public class DatabaseLayer implements Database {
         if(!user.getPwd().equals(password)){
             return Result.error(Response.Status.FORBIDDEN);
         }
-        cache.delete(USER_REDIS_KEY + userId);
         return Result.ok(((UserDAO) users.delUserById(userId).getItem()).toUser());
     }
 
@@ -129,7 +110,6 @@ public class DatabaseLayer implements Database {
         }
 
         var userDAO  = users.updateUser(userId, updateOps).getItem();
-        cache.set(USER_REDIS_KEY + userId, userDAO);
 
         return Result.ok(userDAO.toUser());
     }
@@ -185,7 +165,6 @@ public class DatabaseLayer implements Database {
         if(!this.hasHouse(houseId)){
             return Result.error(Response.Status.NOT_FOUND);
         }
-        cache.delete(HOUSES_REDIS_KEY + houseId);
         return Result.ok(((HouseDAO) houses.deleteHouseById(houseId).getItem()).toHouse());
     }
 
@@ -209,7 +188,6 @@ public class DatabaseLayer implements Database {
             //TODO: Update periods
         }
         var houseDAO = houses.updateHouse(houseId, updateOps).getItem();
-        cache.set(HOUSES_REDIS_KEY + houseId, houseDAO);
         return Result.ok(houseDAO.toHouse());
     }
 
