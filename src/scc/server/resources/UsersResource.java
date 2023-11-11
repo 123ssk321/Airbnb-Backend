@@ -2,12 +2,12 @@ package scc.server.resources;
 
 import scc.data.dto.User;
 import scc.server.service.RestUsers;
-import scc.storage.DatabaseLayer;
+import scc.storage.Database;
 
 public class UsersResource extends Resource implements RestUsers {
-    private final DatabaseLayer db;
+    private final Database db;
 
-    public UsersResource(DatabaseLayer db) {
+    public UsersResource(Database db) {
         super();
         this.db = db;
     }

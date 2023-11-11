@@ -17,6 +17,10 @@ public class AzureProperties
 	public static final String USER_BLOB_CONTAINER_NAME = "users";
 	public static final String HOUSE_BLOB_CONTAINER_NAME = "houses";
 	public static final String PROPS_FILE = "azurekeys-westeurope.props";
+	public static final String USE_CACHE = "USE_CACHE";
+
+	public static final String USE_CACHE_TRUE = "TRUE";
+
 	public static final String REDISH_HOST_NAME = "REDIS_URL";
 	public static final String REDIS_KEY = "REDIS_KEY";
 	private static Properties props;

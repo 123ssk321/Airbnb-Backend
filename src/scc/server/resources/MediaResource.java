@@ -1,6 +1,6 @@
 package scc.server.resources;
 
-import scc.storage.DatabaseLayer;
+import scc.storage.Database;
 import scc.server.service.RestMedia;
 
 /**
@@ -10,9 +10,9 @@ public class MediaResource extends Resource implements RestMedia {
 
 	public enum BlobType {USER, HOUSE}
 
-	private final DatabaseLayer db;
+	private final Database db;
 
-	public MediaResource(DatabaseLayer db){
+	public MediaResource(Database db){
 		super();
 		this.db = db;
 	}

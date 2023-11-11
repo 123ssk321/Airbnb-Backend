@@ -1,21 +1,23 @@
 package scc;
 
+
 import jakarta.ws.rs.core.Application;
 import scc.mgt.AzureProperties;
 import scc.server.resources.ControlResource;
 
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Set;
 import com.azure.cosmos.CosmosClient;
 import com.azure.cosmos.CosmosClientBuilder;
-import com.azure.storage.blob.BlobClient;
+
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobContainerClientBuilder;
 import scc.server.resources.HousesResource;
 import scc.server.resources.MediaResource;
 import scc.server.resources.UsersResource;
+import scc.storage.CacheDatabaseLayer;
 import scc.storage.DatabaseLayer;
+import scc.storage.Database;
 import scc.utils.GenericExceptionMapper;
 
 public class MainApplication extends Application
@@ -43,15 +45,27 @@ public class MainApplication extends Application
 				.connectionString(System.getenv(AzureProperties.BLOB_KEY))
 				.containerName(AzureProperties.HOUSE_BLOB_CONTAINER_NAME)
 				.buildClient();
+		Database dbl;
+		if (System.getenv(AzureProperties.USE_CACHE).equals(AzureProperties.USE_CACHE_TRUE)){
+			dbl = new CacheDatabaseLayer(cosmosClient,
+					System.getenv(AzureProperties.COSMOSDB_DATABASE),
+					AzureProperties.USER_COSMOSDB_CONTAINER_NAME,
+					AzureProperties.HOUSE_COSMOSDB_CONTAINER_NAME,
+					AzureProperties.RENTAL_COSMOSDB_CONTAINER_NAME,
+					AzureProperties.QUESTION_COSMOSDB_CONTAINER_NAME,
+					userBlobContainer,
+					houseBlobContainer);
+		} else {
+			dbl = new DatabaseLayer(cosmosClient,
+					System.getenv(AzureProperties.COSMOSDB_DATABASE),
+					AzureProperties.USER_COSMOSDB_CONTAINER_NAME,
+					AzureProperties.HOUSE_COSMOSDB_CONTAINER_NAME,
+					AzureProperties.RENTAL_COSMOSDB_CONTAINER_NAME,
+					AzureProperties.QUESTION_COSMOSDB_CONTAINER_NAME,
+					userBlobContainer,
+					houseBlobContainer);
+		}
 
-		var dbl = new DatabaseLayer(cosmosClient,
-				System.getenv(AzureProperties.COSMOSDB_DATABASE),
-				AzureProperties.USER_COSMOSDB_CONTAINER_NAME,
-				AzureProperties.HOUSE_COSMOSDB_CONTAINER_NAME,
-				AzureProperties.RENTAL_COSMOSDB_CONTAINER_NAME,
-				AzureProperties.QUESTION_COSMOSDB_CONTAINER_NAME,
-				userBlobContainer,
-				houseBlobContainer);
 		singletons.add(new UsersResource(dbl));
 		singletons.add(new HousesResource(dbl));
 		singletons.add( new MediaResource(dbl));

@@ -15,7 +15,7 @@ import scc.data.dao.*;
 import scc.storage.cosmosdb.*;
 import scc.server.resources.MediaResource.BlobType;
 
-public class DatabaseLayer {
+public class DatabaseLayer implements Database {
 
     private final UsersCDB users;
     private final MediaBlobStorage media;
@@ -47,7 +47,7 @@ public class DatabaseLayer {
         media = new MediaBlobStorage(userBlobContainer, houseBlobContainer);
     }
 
-    private UserDAO getUser(String userId){
+    protected UserDAO getUser(String userId){
         var user = cache.get(USER_REDIS_KEY + userId, UserDAO.class);
         if(user == null){
             user = users.getUser(userId);
@@ -56,8 +56,8 @@ public class DatabaseLayer {
         }
         return user;
     }
-    private boolean hasUser(String userId){return this.getUser(userId) != null;}
-    private HouseDAO getHouse(String houseId){
+    protected boolean hasUser(String userId){return this.getUser(userId) != null;}
+    protected HouseDAO getHouse(String houseId){
         var house = cache.get(HOUSES_REDIS_KEY + houseId, HouseDAO.class);
         if(house == null){
             house = houses.getHouse(houseId);
@@ -68,7 +68,7 @@ public class DatabaseLayer {
     }
     public boolean hasHouse(String houseId){return this.getHouse(houseId) != null;}
 
-    private boolean isOwner(String houseId, String userId){
+    protected boolean isOwner(String houseId, String userId){
         var house = this.getHouse(houseId);
         return userId.equals(house.getOwnerId());
     }
@@ -205,8 +205,8 @@ public class DatabaseLayer {
             updateOps.replace("/name", nameToUpdate);
         if(descriptionToUpdate != null)
             updateOps.replace("/description", descriptionToUpdate);
-        if(periodsToUpdate != null){
-            // TODO: update periods
+        if(periodsToUpdate != null) {
+            //TODO: Update periods
         }
         var houseDAO = houses.updateHouse(houseId, updateOps).getItem();
         cache.set(HOUSES_REDIS_KEY + houseId, houseDAO);

@@ -2,14 +2,14 @@ package scc.server.resources;
 
 import scc.data.dto.*;
 import scc.server.service.RestHouses;
-import scc.storage.DatabaseLayer;
+import scc.storage.Database;
 
 import java.util.List;
 
 public class HousesResource extends Resource implements RestHouses {
-    private final DatabaseLayer db;
+    private final Database db;
 
-    public HousesResource(DatabaseLayer db){
+    public HousesResource(Database db){
         super();
         this.db = db;
     }
