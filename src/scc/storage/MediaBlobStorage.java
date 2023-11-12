@@ -4,7 +4,6 @@ import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobContainerClient;
 import scc.server.resources.MediaResource.BlobType;
 import scc.utils.Hash;
-import scc.utils.Result;
 
 public class MediaBlobStorage {
     private final BlobContainerClient userBlobContainerClient;
@@ -25,14 +24,14 @@ public class MediaBlobStorage {
     public String uploadUserPhoto(byte[] contents){
         String id = "user-"+ Hash.of(contents);
         var blob = userBlobContainerClient.getBlobClient(id);
-        blob.upload(BinaryData.fromBytes(contents));
+        blob.upload(BinaryData.fromBytes(contents), true);
         return id;
     }
 
     public String uploadHousePhoto(byte[] contents){
         String id = "house-"+ Hash.of(contents);
         var blob = houseBlobContainerClient.getBlobClient(id);
-        blob.upload(BinaryData.fromBytes(contents));
+        blob.upload(BinaryData.fromBytes(contents), true);
         return id;
     }
 
