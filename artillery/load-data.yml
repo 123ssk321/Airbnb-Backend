@@ -1,0 +1,108 @@
+config:
+  target: 'https://scc24appwesteurope57418.azurewebsites.net/rest'
+  plugins:
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+  processor: "./test-utils.js"
+  variables:
+     metricsProcessEndpoint : "myProcessEndpoint"  # function used to aggregate endpoints for statistics
+  phases:
+  - name: "Create users"    # Create users
+    duration: 1
+    arrivalCount: 1
+
+scenarios:
+  - name: 'Create users'
+    weight: 1
+    flow:
+      - loop:         # let's create 250 users - loop ... count
+        - post:       # First: post image for the user
+            url: "/media/users"
+            headers:
+              Content-Type: application/octet-stream
+              Accept: application/json
+            beforeRequest: "uploadImageBody"
+            afterResponse: "processUploadReply"
+            capture: 
+              regexp: "(.+)"
+              as: "imageId"              # capture the reply as image id to be used in user creation
+        - function: "genNewUser"         # Generate the needed information for the user
+        - post:
+            url: "/users"
+            headers:
+              Content-Type: application/json
+              Accept: application/json
+            json:
+              id: "{{ id }}"
+              name: "{{ name }}"
+              pwd: "{{ pwd }}"
+              photoId: "{{ imageId }}"
+              houseIds: []
+            afterResponse: "genNewUserReply"    # capture result and store in file
+        count: 1
+
+      - loop:                            # let's create 50 users with houses - loop ... count
+        - post:                          # First: post image for the user
+            url: "/media/users"
+            headers:
+              Content-Type: application/octet-stream
+              Accept: application/json
+            beforeRequest: "uploadImageBody"
+            afterResponse: "processUploadReply"
+            capture: 
+              regexp: "(.+)"
+              as: "imageId"              # capture the reply as image id to be used in user creation
+        - function: "genNewUser"         # Generate the needed information for the user
+        - post:
+            url: "/users"
+            headers:
+              Content-Type: application/json
+              Accept: application/json
+            json:
+              id: "{{ id }}"
+              name: "{{ name }}"
+              pwd: "{{ pwd }}"
+              photoId: "{{ imageId }}"
+              houseIds: []
+            afterResponse: "genNewUserReply"    # capture result and store in file
+        - post:
+            url: "/auth"
+            headers:
+              Content-Type: application/json
+            json:
+              user: "{{ id }}"
+              pwd: "{{ pwd }}"
+        - loop:                            # let's create (2) 50 houses - loop ... count
+          - post:                          # First: post image for the house
+              url: "/media/houses"
+              headers:
+                Content-Type: application/octet-stream
+                Accept: application/json
+              beforeRequest: "uploadImageBody"
+              afterResponse: "processUploadReply"
+              capture: 
+                regexp: "(.+)"
+                as: "imageId"              # capture the reply as image id to be used in house creation
+          - function: "genNewHouse"         # Generate the needed information for the house
+          - post:
+              url: "/house"
+              cookie:
+              headers:
+                Content-Type: application/json
+                Accept: application/json
+              json:
+                name: "{{ name }}"
+                ownerId: "{{ id }}"
+                location: "{{ location }}"
+                description: "{{ description }}"
+                photoIds: ["{{ imageId }}"]
+                periods:  "{{periods}}"
+
+              afterResponse: "genNewHouseReply"  
+        #  whileTrue: "random90"
+          count: 2
+        count: 5
+
+      
+
+ 

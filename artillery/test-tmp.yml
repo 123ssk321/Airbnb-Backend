@@ -1,0 +1,69 @@
+config:
+  target: 'https://scc24appwesteurope57418.azurewebsites.net/rest'
+  plugins:
+    metrics-by-endpoint: {}
+  processor: "./test-utils-tmp.js"
+  variables:
+     metricsProcessEndpoint : "myProcessEndpoint"  # function used to aggregate endpoints for statistics
+  phases:
+    - name: "Create users"
+      duration: 1
+      arrivalCount: 1
+  # - name: "Warm up"    # WARM UP PHASE: duration: 10s, starting with 1 new client/sec up to 5 new clients/sec
+  #   duration: 10
+  #   arrivalRate: 1
+  #   rampTo: 5
+  # - name: "Main test"    # MAIN TESTS: duration: 30s, with 10 new clients/sec
+  #   duration: 30         # NOTE: you should adjust the number of clients per second depending on the complexity
+  #   arrivalRate: 10      # of your scenarios. you need to try a number that can be handled by the server.
+
+# scenarios:
+#   - name: 'Upload image'
+#     weight: 1
+#     flow:
+#       - post:
+#           url: "/media/users"
+#           headers:
+#             Content-Type: application/octet-stream
+#             Accept: application/json
+#           beforeRequest: "uploadImageBody"
+#           afterResponse: "processUploadReply"            
+ 
+#   - name: 'Download image'
+#     weight: 5
+#     flow:
+#       - function: "selectImageToDownload"
+#       - get:
+#           url: "/media/users/{{ imageId }}"
+#           headers:
+#             Accept: application/octet-stream
+#           ifTrue: "imageId"
+scenarios:
+  - name: 'Create users'
+    weight: 1
+    flow:
+      - loop: # let's create 50 users - loop ... count
+        - post: # First: post image for the user
+            url: "/media/users"
+            headers:
+              Content-Type: application/octet-stream
+              Accept: application/json
+            beforeRequest: "uploadImageBody"
+            afterResponse: "processUploadReply"
+            capture: 
+              regexp: "(.+)"
+              as: "imageId" # capture the reply as image id to be used in user 
+        - function: "genNewUser" # Generate the needed information for the user
+        - post:
+            url: "/users"
+            headers:
+              Content-Type: application/json
+              Accept: application/json
+            json:
+              id: "{{ id }}"
+              name: "{{ name }}"
+              pwd: "{{ pwd }}"
+              photoId: "{{ imageId }}"
+              houseIds: []
+            afterResponse: "genNewUserReply" # capture result and store in file
+        count: 52
