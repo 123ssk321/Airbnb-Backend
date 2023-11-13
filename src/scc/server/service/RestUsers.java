@@ -20,7 +20,7 @@ public interface RestUsers {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    String createUser(User user);
+    User createUser(User user);
 
     /**
      * Deletes the user identified by userId.

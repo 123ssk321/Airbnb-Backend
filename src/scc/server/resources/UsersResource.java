@@ -13,7 +13,7 @@ public class UsersResource extends Resource implements RestUsers {
     }
 
     @Override
-    public String createUser(User user) {
+    public User createUser(User user) {
         return super.getResult(() -> db.createUser(user));
     }
 

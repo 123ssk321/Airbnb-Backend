@@ -7,19 +7,22 @@ import scc.utils.Result;
 import java.util.List;
 
 public interface Database {
-    
-    boolean hasHouse(String houseId);
-    
-    Result<String> createUser(User user);
+
+    /*---------------------------------------------------- USERS -----------------------------------------------------*/
+
+    Result<User> createUser(User user);
 
     Result<User> deleteUser(String userId, String password);
     
     Result<User> updateUser(String userId, String password, User user);
 
+    /*---------------------------------------------------- MEDIA -----------------------------------------------------*/
 
     Result<String> uploadMedia(byte[] contents, MediaResource.BlobType type);
 
     Result<byte[]> downloadMedia(String id, MediaResource.BlobType type);
+
+    /*--------------------------------------------------- HOUSES -----------------------------------------------------*/
 
     Result<String> createHouse(House house);
 
@@ -31,6 +34,8 @@ public interface Database {
 
     Result<List<House>> listUserHouses(String ownerId);
 
+    /*-------------------------------------------------- RENTALS -----------------------------------------------------*/
+
     Result<String> createRental(String houseId, Rental rental);
 
     Result<Rental> updateRental(String houseId, String rentalId, Rental rental);
@@ -38,6 +43,8 @@ public interface Database {
     Result<List<Rental>> listRentals(String houseId);
 
     Result<List<DiscountedRental>> listDiscountedRentals();
+
+    /*------------------------------------------------ QUESTIONS -----------------------------------------------------*/
 
     Result<String> createQuestion(String houseId, Question question);
 
