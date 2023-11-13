@@ -1,5 +1,6 @@
 package scc.server.resources;
 
+import jakarta.ws.rs.core.Cookie;
 import scc.data.dto.*;
 import scc.server.service.RestHouses;
 import scc.storage.Database;
@@ -7,26 +8,29 @@ import scc.storage.Database;
 import java.util.List;
 
 public class HousesResource extends Resource implements RestHouses {
-    private final Database db;
 
     public HousesResource(Database db){
-        super();
-        this.db = db;
+        super(db);
     }
 
     @Override
-    public String createHouse(House house) {
-        return super.getResult(() -> db.createHouse(house));
+    public String createHouse(Cookie session, House house) {
+        return super.getResult(() -> db.createHouse(session, house));
     }
 
     @Override
-    public House deleteHouse(String houseId) {
-        return super.getResult(() -> db.deleteHouse(houseId));
+    public House getHouse(Cookie session, String houseId) {
+        return super.getResult(() -> db.getHouse(session, houseId));
     }
 
     @Override
-    public House updateHouse(String houseId, House house) {
-        return super.getResult(() -> db.updateHouse(houseId, house));
+    public House deleteHouse(Cookie session, String houseId) {
+        return super.getResult(() -> db.deleteHouse(session, houseId));
+    }
+
+    @Override
+    public House updateHouse(Cookie session, String houseId, House house) {
+        return super.getResult(() -> db.updateHouse(session, houseId, house));
     }
 
     @Override
@@ -35,23 +39,23 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public List<House> listUserHouses(String ownerId) {
-        return super.getResult(() -> db.listUserHouses(ownerId));
+    public List<House> listUserHouses(Cookie session, String ownerId) {
+        return super.getResult(() -> db.listUserHouses(session, ownerId));
     }
 
     @Override
-    public String createRental(String houseId, Rental rental) {
-        return super.getResult(() -> db.createRental(houseId, rental));
+    public String createRental(Cookie session, String houseId, Rental rental) {
+        return super.getResult(() -> db.createRental(session, houseId, rental));
     }
 
     @Override
-    public Rental updateRental(String houseId, String rentalId, Rental rental) {
-        return super.getResult(() -> db.updateRental(houseId, rentalId, rental));
+    public Rental updateRental(Cookie session, String houseId, String rentalId, Rental rental) {
+        return super.getResult(() -> db.updateRental(session, houseId, rentalId, rental));
     }
 
     @Override
-    public List<Rental> listRentals(String houseId) {
-        return super.getResult(() -> db.listRentals(houseId));
+    public List<Rental> listRentals(Cookie session, String houseId) {
+        return super.getResult(() -> db.listRentals(session, houseId));
     }
 
     @Override
@@ -60,13 +64,13 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public String createQuestion(String houseId, Question question) {
-        return super.getResult(() -> db.createQuestion(houseId, question));
+    public String createQuestion(Cookie session, String houseId, Question question) {
+        return super.getResult(() -> db.createQuestion(session, houseId, question));
     }
 
     @Override
-    public String createReply(String houseId, String questionId, Reply reply) {
-        return super.getResult(() -> db.createReply(houseId, questionId, reply));
+    public String createReply(Cookie session, String houseId, String questionId, Reply reply) {
+        return super.getResult(() -> db.createReply(session, houseId, questionId, reply));
     }
 
     @Override

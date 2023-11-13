@@ -2,8 +2,11 @@ package scc.storage;
 
 import com.azure.cosmos.CosmosClient;
 import com.azure.storage.blob.BlobContainerClient;
+import jakarta.ws.rs.core.Cookie;
+import jakarta.ws.rs.core.Response;
 import scc.data.dao.*;
-
+import scc.server.auth.LoginDetails;
+import scc.utils.Result;
 
 
 public class DatabaseLayer extends AbstractDatabase implements Database{
@@ -19,6 +22,14 @@ public class DatabaseLayer extends AbstractDatabase implements Database{
         super(cClient, cosmosdbDatabase, userCosmosDBContainerName, houseCosmosDBContainerName, rentalCosmosDBContainerName, questionCosmosDBContainerName, userBlobContainer, houseBlobContainer);
 
     }
+
+    /*---------------------------------------------------- AUTH ------------------------------------------------------*/
+
+    public Result<Response> auth(LoginDetails loginDetails){
+        return Result.ok(Response.ok().build());
+    }
+
+    public Result<String> checkCookie(Cookie session, String id){return Result.ok("OK");}
 
     /*--------------------------------------------------- USERS ------------------------------------------------------*/
 

@@ -3,6 +3,7 @@ package scc;
 
 import jakarta.ws.rs.core.Application;
 import scc.mgt.AzureProperties;
+import scc.server.auth.AuthResource;
 import scc.server.resources.ControlResource;
 
 import java.util.HashSet;
@@ -66,6 +67,7 @@ public class MainApplication extends Application
 					houseBlobContainer);
 		}
 
+		singletons.add(new AuthResource(dbl));
 		singletons.add(new UsersResource(dbl));
 		singletons.add(new HousesResource(dbl));
 		singletons.add( new MediaResource(dbl));

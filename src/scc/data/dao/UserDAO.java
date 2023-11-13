@@ -1,6 +1,7 @@
 package scc.data.dao;
 
 import scc.data.dto.User;
+import scc.utils.Hash;
 
 import java.util.Arrays;
 
@@ -10,7 +11,7 @@ import java.util.Arrays;
 public class UserDAO {
 	private String _rid;
 	private String _ts;
-	private String id; // TODO: change id to nickname
+	private String id; // nickname
 	private String name;
 	private String pwd;
 	private String photoId;
@@ -19,7 +20,7 @@ public class UserDAO {
 	public UserDAO() {
 	}
 	public UserDAO( User u) {
-		this(u.getId(), u.getName(), u.getPwd(), u.getPhotoId(), u.getHouseIds());
+		this(u.getId(), u.getName(), Hash.of(u.getPwd()), u.getPhotoId(), u.getHouseIds());
 	}
 	public UserDAO(String id, String name, String pwd, String photoId, String[] houseIds) {
 		super();
@@ -43,9 +44,6 @@ public class UserDAO {
 	}
 	public String getId() {
 		return id;
-	}
-	public void setId(String id) {
-		this.id = id;
 	}
 	public String getName() {
 		return name;
@@ -72,7 +70,7 @@ public class UserDAO {
 		this.houseIds = houseIds;
 	}
 	public User toUser() {
-		return new User( id, name, pwd, photoId, houseIds == null ? null : Arrays.copyOf(houseIds,houseIds.length));
+		return new User(id, name, pwd, photoId, houseIds == null ? null : Arrays.copyOf(houseIds,houseIds.length));
 	}
 	@Override
 	public String toString() {

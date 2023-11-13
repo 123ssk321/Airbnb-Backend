@@ -1,17 +1,14 @@
 package scc.cache;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
-import scc.data.dao.HouseDAO;
-import scc.data.dao.UserDAO;
 import scc.mgt.AzureProperties;
 
 public class RedisCache {
 	private static JedisPool instance;
-	private ObjectMapper mapper;
+	private final ObjectMapper mapper;
 	public RedisCache(){ mapper = new ObjectMapper();}
 	private synchronized JedisPool getCachePool() {
 		if( instance != null)

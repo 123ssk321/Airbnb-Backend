@@ -10,23 +10,20 @@ public class MediaResource extends Resource implements RestMedia {
 
 	public enum BlobType {USER, HOUSE}
 
-	private final Database db;
-
 	public MediaResource(Database db){
-		super();
-		this.db = db;
+		super(db);
 	}
 
 	public String uploadUserMedia(byte[] contents) {
-		return super.getResult(() -> db.uploadMedia(contents, BlobType.USER));
+		return super.getResult(() -> super.db.uploadMedia(contents, BlobType.USER));
 	}
 
 	public byte[] downloadUserMedia(String id) {
-		return super.getResult(() -> db.downloadMedia(id, BlobType.USER));
+		return super.getResult(() -> super.db.downloadMedia(id, BlobType.USER));
 	}
 
 	public String uploadHouseMedia(byte[] contents) {
-		return super.getResult(() -> db.uploadMedia(contents, BlobType.HOUSE));
+		return super.getResult(() -> super.db.uploadMedia(contents, BlobType.HOUSE));
 	}
 
 	public byte[] downloadHouseMedia(String id) {

@@ -9,7 +9,7 @@ import java.util.Arrays;
  * handle the empty list.
  */
 public class User {
-	private String id; // TODO: change id to nickname
+	private String id; // nickname
 	private String name;
 	private String pwd;
 	private String photoId;
