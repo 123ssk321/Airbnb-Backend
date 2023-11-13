@@ -90,11 +90,14 @@ public abstract class AbstractDatabase implements Database {
         }
 
         for(String houseId : user.getHouseIds()){
-            var house = this.getHouse(houseId);
+            var house = this.getHouseDAO(houseId);
             house.setOwnerId("Deleted User");
         }
 
-        // TODO: set user rentals do Deleted User
+        for(String rentalId : user.getRentalIds()){
+            var rental = rentals.getRental(rentalId);
+            rental.setTenantId("Deleted User");
+        }
 
         users.delUserById(userId);
         return Result.ok(user.toUser());
@@ -139,6 +142,31 @@ public abstract class AbstractDatabase implements Database {
         }
         return updateOps;
     }
+
+    public Result<List<House>> listUserHouses(Cookie session, String ownerId) {
+        if(ownerId == null || !this.hasUser(ownerId)){
+            return Result.error(Response.Status.BAD_REQUEST);
+        }
+
+        var authRes = checkCookie(session, ownerId);
+        if(!authRes.isOK())
+            return Result.error(authRes.error());
+
+        return Result.ok(houses.getHousesByOwner(ownerId).stream().map(HouseDAO::toHouse).toList());
+    }
+
+    public Result<List<Rental>> listUserRentals(Cookie session, String userId) {
+        if(userId == null || !this.hasUser(userId)){
+            return Result.error(Response.Status.BAD_REQUEST);
+        }
+
+        var authRes = checkCookie(session, userId);
+        if(!authRes.isOK())
+            return Result.error(authRes.error());
+
+        return Result.ok(rentals.getRentalsByUser(userId).stream().map(RentalDAO::toRental).toList());
+    }
+
 
     /*---------------------------------------------------- MEDIA -----------------------------------------------------*/
 
@@ -196,33 +224,25 @@ public abstract class AbstractDatabase implements Database {
         return Result.ok(houses.putHouse(new HouseDAO(house)).getItem().getId());
     }
 
-    public Result<House> getHouse(Cookie session, String houseId){
+    public Result<House> getHouse(String houseId){
         if(houseId == null) {
             return Result.error(Response.Status.BAD_REQUEST);
         }
 
-        var house = this.getHouse(houseId);
+        var house = this.getHouseDAO(houseId);
         if(house == null){
             return Result.error(Response.Status.NOT_FOUND);
         }
 
-        var owner = this.getUser(house.getOwnerId());
-        if (owner == null)
-            return Result.error(Response.Status.NOT_FOUND);
-
-        var authRes = checkCookie(session, owner.getId());
-        if(!authRes.isOK())
-            return Result.error(authRes.error());
-
         return Result.ok(house.toHouse());
     }
 
-    protected abstract HouseDAO getHouse(String houseId);
+    protected abstract HouseDAO getHouseDAO(String houseId);
 
-    public boolean hasHouse(String houseId){return this.getHouse(houseId) != null;}
+    public boolean hasHouse(String houseId){return this.getHouseDAO(houseId) != null;}
 
     protected boolean isOwner(String houseId, String userId){
-        var house = this.getHouse(houseId);
+        var house = this.getHouseDAO(houseId);
         return userId.equals(house.getOwnerId());
     }
 
@@ -231,7 +251,7 @@ public abstract class AbstractDatabase implements Database {
             return Result.error(Response.Status.BAD_REQUEST);
         }
 
-        var house = this.getHouse(houseId);
+        var house = this.getHouseDAO(houseId);
         if(house == null){
             return Result.error(Response.Status.NOT_FOUND);
         }
@@ -257,7 +277,7 @@ public abstract class AbstractDatabase implements Database {
         if(houseId == null || houseToUpdate == null){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        var house = this.getHouse(houseId);
+        var house = this.getHouseDAO(houseId);
         if(house == null){
             return Result.error(Response.Status.NOT_FOUND);
         }
@@ -293,18 +313,6 @@ public abstract class AbstractDatabase implements Database {
         return Result.ok(houses.searchHouses(location, startDate, endDate).stream().map(HouseDAO::toHouse).toList());
     }
 
-    public Result<List<House>> listUserHouses(Cookie session, String ownerId) {
-        if(ownerId == null || !this.hasUser(ownerId)){
-            return Result.error(Response.Status.BAD_REQUEST);
-        }
-
-        var authRes = checkCookie(session, ownerId);
-        if(!authRes.isOK())
-            return Result.error(authRes.error());
-
-        return Result.ok(houses.getHousesByOwner(ownerId).stream().map(HouseDAO::toHouse).toList());
-    }
-
     /*-------------------------------------------------- RENTALS -----------------------------------------------------*/
 
     public Result<String> createRental(Cookie session, String houseId, Rental rental) {
@@ -313,7 +321,7 @@ public abstract class AbstractDatabase implements Database {
                 || !this.hasUser(rental.getTenantId()) || !this.hasUser(rental.getLandlordId())){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        var house = this.getHouse(houseId);
+        var house = this.getHouseDAO(houseId);
         if (house == null)
             return Result.error(Response.Status.NOT_FOUND);
         if(!house.getOwnerId().equals(rental.getLandlordId()))
@@ -357,11 +365,11 @@ public abstract class AbstractDatabase implements Database {
         return Result.ok(rentals.updateRental(rentalId, updateOps).getItem().toRental());
     }
 
-    public Result<List<Rental>> listRentals(Cookie session, String houseId) {
+    public Result<List<Rental>> listHouseRentals(Cookie session, String houseId) {
         if(houseId == null)
             return Result.error(Response.Status.BAD_REQUEST);
 
-        var house = this.getHouse(houseId);
+        var house = this.getHouseDAO(houseId);
         if(house == null){
             return Result.error(Response.Status.BAD_REQUEST);
         }
@@ -430,7 +438,7 @@ public abstract class AbstractDatabase implements Database {
 
     }
 
-    public Result<List<Question>> listHouseQuestions(String houseId) {
+    public Result<List<Question>> listHouseQuestions(String houseId, Boolean answered) {
         if (houseId == null) {
             return Result.error(Response.Status.BAD_REQUEST);
         }
@@ -438,7 +446,7 @@ public abstract class AbstractDatabase implements Database {
             return Result.error(Response.Status.NOT_FOUND);
         }
 
-        return Result.ok(questions.getHouseQuestions(houseId).stream().map(QuestionDAO::toQuestion).toList());
+        return Result.ok(questions.getHouseQuestions(houseId, answered).stream().map(QuestionDAO::toQuestion).toList());
     }
 
 }

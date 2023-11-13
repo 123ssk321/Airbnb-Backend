@@ -1,9 +1,13 @@
 package scc.server.service;
 
 import jakarta.ws.rs.core.Cookie;
+import scc.data.dto.House;
+import scc.data.dto.Rental;
 import scc.data.dto.User;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+
+import java.util.List;
 
 @Path(RestUsers.PATH)
 public interface RestUsers {
@@ -74,5 +78,36 @@ public interface RestUsers {
     User updateUser(@CookieParam("scc:session") Cookie session,
                     @PathParam("userId") String userId,
                     User user);
+
+    /**
+     * Returns the list of houses of a given user.
+     *
+     * @param session with login details
+     * @param ownerId ID of the user
+     * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
+     *         401 if userId and password are incorrect.
+     *         400 otherwise.
+     */
+    @GET
+    @Path("/{ownerId}/house")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<House> listUserHouses(@CookieParam("scc:session") Cookie session,
+                               @PathParam("ownerId") String ownerId);
+
+    /**
+     * Returns the list of rentals for a given user.
+     *
+     * @param session with login details
+     * @param userId the ID of the user.
+     * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
+     *         401 if userId and password are incorrect.
+     *         404 if user does not exist.
+     *         400 otherwise.
+     */
+    @GET
+    @Path("/{userId}/rental")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<Rental> listUserRentals(@CookieParam("scc:session") Cookie session,
+                                 @PathParam("userId") String userId);
 
 }

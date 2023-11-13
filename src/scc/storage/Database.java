@@ -24,6 +24,10 @@ public interface Database {
     
     Result<User> updateUser(Cookie session, String userId, User user);
 
+    Result<List<House>> listUserHouses(Cookie session, String ownerId);
+
+    Result<List<Rental>> listUserRentals(Cookie session, String userId);
+
     /*---------------------------------------------------- MEDIA -----------------------------------------------------*/
 
     Result<String> uploadMedia(byte[] contents, MediaResource.BlobType type);
@@ -34,7 +38,7 @@ public interface Database {
 
     Result<String> createHouse(Cookie session, House house);
 
-    Result<House> getHouse(Cookie session, String houseId);
+    Result<House> getHouse(String houseId);
 
     Result<House> deleteHouse(Cookie session, String houseId);
 
@@ -42,15 +46,13 @@ public interface Database {
 
     Result<List<House>> searchHouses(String location, String startDate, String endDate);
 
-    Result<List<House>> listUserHouses(Cookie session, String ownerId);
-
     /*-------------------------------------------------- RENTALS -----------------------------------------------------*/
 
     Result<String> createRental(Cookie session, String houseId, Rental rental);
 
     Result<Rental> updateRental(Cookie session, String houseId, String rentalId, Rental rental);
 
-    Result<List<Rental>> listRentals(Cookie session, String houseId);
+    Result<List<Rental>> listHouseRentals(Cookie session, String houseId);
 
     Result<List<DiscountedRental>> listDiscountedRentals();
 
@@ -60,6 +62,6 @@ public interface Database {
 
     Result<String> createReply(Cookie session, String houseId, String questionId, Reply reply);
 
-    Result<List<Question>> listHouseQuestions(String houseId);
+    Result<List<Question>> listHouseQuestions(String houseId, Boolean answered);
     
 }

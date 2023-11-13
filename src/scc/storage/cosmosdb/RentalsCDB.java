@@ -53,6 +53,12 @@ public class RentalsCDB {
         return container.patchItem(rentalId, key, updateOps, RentalDAO.class);
     }
 
+    public CosmosPagedIterable<RentalDAO> getRentalsByUser(String userId) {
+        return container.queryItems(
+                "SELECT * FROM rentals WHERE rentals.tenantId=\"" + userId + "\"",
+                new CosmosQueryRequestOptions(),
+                RentalDAO.class);
+    }
     public CosmosPagedIterable<RentalDAO> getRentalsByHouse(String houseId) {
         return container.queryItems(
                 "SELECT * FROM rentals WHERE rentals.houseId=\"" + houseId + "\"",

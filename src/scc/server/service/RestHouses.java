@@ -31,17 +31,15 @@ public interface RestHouses {
     /**
      * Returns the house identified by houseId.
      *
-     * @param session with login details
      * @param houseId the userId of the user
      * @return 200 the deleted house object
-     *         401 if userId and password are incorrect.
      *         404 if no house exists with the provided houseId.
      *         400 otherwise.
      */
     @GET
     @Path("/{houseId}")
     @Produces(MediaType.APPLICATION_JSON)
-    House getHouse(@CookieParam("scc:session") Cookie session, @PathParam("houseId") String houseId);
+    House getHouse(@PathParam("houseId") String houseId);
 
     /**
      * Deletes the house identified by houseId.
@@ -94,21 +92,6 @@ public interface RestHouses {
                              @QueryParam(END_DATE) String endDate);
 
     /**
-     * Returns the list of houses of a given user.
-     *
-     * @param session with login details
-     * @param ownerId ID of the user
-     * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
-     *         401 if userId and password are incorrect.
-     *         400 otherwise.
-     */
-    @GET
-    @Path("/{ownerId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    List<House> listUserHouses(@CookieParam("scc:session") Cookie session,
-                               @PathParam("ownerId") String ownerId);
-
-    /**
      * Creates a new rental for a given house.
      *
      * @param session with login details
@@ -159,8 +142,8 @@ public interface RestHouses {
     @GET
     @Path("/{houseId}/rental")
     @Produces(MediaType.APPLICATION_JSON)
-    List<Rental> listRentals(@CookieParam("scc:session") Cookie session,
-                             @PathParam("houseId") String houseId);
+    List<Rental> listHouseRentals(@CookieParam("scc:session") Cookie session,
+                                  @PathParam("houseId") String houseId);
 
     /**
      * Returns the list of discounted rentals in the near future (2 weeks).
@@ -204,14 +187,15 @@ public interface RestHouses {
      *         404 if the houseId does not exist or the questionId does not exist.
      *         400 otherwise.
      */
-    @POST
+    @PUT
     @Path("/{houseId}/question/{questionId}")
     @Consumes(MediaType.APPLICATION_JSON)
     String createReply(@CookieParam("scc:session") Cookie session,
                        @PathParam("houseId") String houseId, @PathParam("questionId") String questionId, Reply reply);
 
     /**
-     * Returns the list of questions for a given house.
+     * Returns the list of questions for a given house. If answered is null returns all questions(with and without reply)
+     * If answered is true then returns questions with reply else question without reply.
      *
      * @param houseId the ID of the house
      * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
@@ -221,6 +205,6 @@ public interface RestHouses {
     @GET
     @Path("{houseId}/question")
     @Produces(MediaType.APPLICATION_JSON)
-    List<Question> listHouseQuestions(@PathParam("houseId") String houseId);
+    List<Question> listHouseQuestions(@PathParam("houseId") String houseId, @QueryParam("answered") Boolean answered);
 
 }

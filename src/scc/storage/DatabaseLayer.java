@@ -39,7 +39,7 @@ public class DatabaseLayer extends AbstractDatabase implements Database{
 
     /*-------------------------------------------------- HOUSES ------------------------------------------------------*/
 
-    protected HouseDAO getHouse(String houseId){
+    protected HouseDAO getHouseDAO(String houseId){
         return houses.getHouse(houseId);
     }
 

@@ -105,7 +105,7 @@ public class CacheDatabaseLayer extends AbstractDatabase implements Database {
     /*--------------------------------------------------- HOUSES -----------------------------------------------------*/
 
     @Override
-    protected HouseDAO getHouse(String houseId) {
+    protected HouseDAO getHouseDAO(String houseId) {
         var house = cache.get(getCacheKey(HOUSE_REDIS_KEY, houseId), HouseDAO.class);
         if(house == null){
             house = super.houses.getHouse(houseId);

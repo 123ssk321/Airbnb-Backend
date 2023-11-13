@@ -19,8 +19,8 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public House getHouse(Cookie session, String houseId) {
-        return super.getResult(() -> db.getHouse(session, houseId));
+    public House getHouse(String houseId) {
+        return super.getResult(() -> db.getHouse(houseId));
     }
 
     @Override
@@ -39,11 +39,6 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public List<House> listUserHouses(Cookie session, String ownerId) {
-        return super.getResult(() -> db.listUserHouses(session, ownerId));
-    }
-
-    @Override
     public String createRental(Cookie session, String houseId, Rental rental) {
         return super.getResult(() -> db.createRental(session, houseId, rental));
     }
@@ -54,8 +49,8 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public List<Rental> listRentals(Cookie session, String houseId) {
-        return super.getResult(() -> db.listRentals(session, houseId));
+    public List<Rental> listHouseRentals(Cookie session, String houseId) {
+        return super.getResult(() -> db.listHouseRentals(session, houseId));
     }
 
     @Override
@@ -74,8 +69,8 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public List<Question> listHouseQuestions(String houseId) {
-        return super.getResult(() -> db.listHouseQuestions(houseId));
+    public List<Question> listHouseQuestions(String houseId, Boolean answered) {
+        return super.getResult(() -> db.listHouseQuestions(houseId, answered));
     }
 
 }

@@ -6,7 +6,6 @@ import com.azure.cosmos.models.CosmosPatchOperations;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
 import com.azure.cosmos.models.PartitionKey;
 import com.azure.cosmos.util.CosmosPagedIterable;
-import scc.data.dao.HouseDAO;
 import scc.data.dao.QuestionDAO;
 
 import java.util.logging.Logger;
@@ -33,9 +32,19 @@ public class QuestionsCDB {
         container.patchItem(questionId, key, updateOps, QuestionDAO.class);
     }
 
-    public CosmosPagedIterable<QuestionDAO> getHouseQuestions(String houseId) {
+    public CosmosPagedIterable<QuestionDAO> getHouseQuestions(String houseId, Boolean answered) {
+        String query;
+        if (answered == null)
+            query = "SELECT * FROM questions WHERE questions.houseId=\"" + houseId + "\"";
+        else if (answered) {
+            query = "SELECT * FROM questions WHERE questions.houseId=\"" + houseId + "\""
+                                            + " AND NOT IS_NULL(questions.reply)";
+        } else
+            query = "SELECT * FROM questions WHERE questions.houseId=\"" + houseId + "\""
+                    + " AND IS_NULL(questions.reply)";
+
         return container.queryItems(
-                "SELECT * FROM questions WHERE questions.houseId=\"" + houseId + "\"",
+                query,
                 new CosmosQueryRequestOptions(),
                 QuestionDAO.class);
     }

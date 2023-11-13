@@ -14,13 +14,15 @@ public class User {
 	private String pwd;
 	private String photoId;
 	private String[] houseIds;
-	public User(String id, String name, String pwd, String photoId, String[] houseIds) {
+	private String[] rentalIds;
+	public User(String id, String name, String pwd, String photoId, String[] houseIds, String[] rentalIds) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.pwd = pwd;
 		this.photoId = photoId;
 		this.houseIds = houseIds;
+		this.rentalIds = rentalIds;
 	}
 	public User(){}
 	public String getId() {
@@ -53,10 +55,19 @@ public class User {
 	public void setHouseIds(String[] houseIds) {
 		this.houseIds = houseIds;
 	}
+
+	public String[] getRentalIds() {
+		return rentalIds;
+	}
+
+	public void setRentalIds(String[] rentalIds) {
+		this.rentalIds = rentalIds;
+	}
+
 	@Override
 	public String toString() {
 		return "User [id=" + id + ", name=" + name + ", pwd=" + pwd + ", photoId=" + photoId + ", houseIds="
-				+ Arrays.toString(houseIds) + "]";
+				+ Arrays.toString(houseIds) + ", rentaldIds=" + Arrays.toString(rentalIds) + "]";
 	}
 
 }
