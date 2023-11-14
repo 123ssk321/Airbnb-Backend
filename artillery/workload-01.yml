@@ -1,5 +1,5 @@
 config:
-  target: 'https://scc24appwesteurope57418.azurewebsites.net/rest'
+  target: 'https://scc24appwesteurope57449.azurewebsites.net/rest'
   plugins:
     expect: {}
     metrics-by-endpoint:
@@ -80,16 +80,29 @@ scenarios:
     weight: 1
     flow:
       - function: "selectUserSkewed"
-      #- post:                          # First: login as a user
-      #    url: "/user/auth"
-      #    name: "POST:/user/auth"
-      #    headers:
-      #      Content-Type: application/json
-      #    json:
-      #      user: "{{ user }}"
-      #      pwd: "{{ pwd }}"
+      - post:                          # First: login as a user
+         url: "/user/auth"
+         cookie: "{{ sessionId }}"
+         name: "POST:/user/auth"
+         headers:
+           Content-Type: application/json
+         json:
+           userId: "{{ id }}"
+           pwd: "{{ pwd }}"
+         capture:
+              header: "set-cookie"
+              as: "sessionId"
+      - get:                          # Get rentals for the user (assuming rentals + houses + discount initial page)
+          url: "/users/{{ id }}/rentals"
+          name: "GET:/user/*/rentals"
+          headers:
+            Accept: application/json
+          capture: 
+            json: "$"
+            as: "rentalsLst"
       - get:                          # Get houses of the user 
-          url: "/house/{{ id }}"
+          url: "/users/{{ id }}/house"
+          cookie: "{{ sessionId }}"
           headers:
             Accept: application/json
           capture: 
@@ -109,7 +122,7 @@ scenarios:
           capture: 
             json: "$"
             as: "rentalsDiscountLst"  
-      - loop:                                   # Check the rentals of the houses of the user
+      - loop:                                   # Check the rentals of the houses 
         - get:                          
             url: "/house/{{ $loopElement.id }}/rental"
             headers:

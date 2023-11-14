@@ -11,6 +11,7 @@ module.exports = {
   genNewUserReply,
   genDeleteUserReply,
   genUpdateUsername,
+  toJSON,
   genNewHouse,
   genNewHouseReply,
   selectUserSkewed,
@@ -88,6 +89,14 @@ function loadData() {
 }
 
 loadData();
+
+
+function toJSON(requestParams, response, context, ee, next){
+	if( response.statusCode >= 200 && response.statusCode < 300){
+		context.vars.sessionCookie = JSON.parse(context.vars.sessionId)
+	}
+	return next()
+}
 
 /**
  * Sets the body to an image, when using images.
@@ -194,8 +203,10 @@ function genNewHouse(context, events, done) {
 		startDate = dates[1]
 
     	cost = random(500) + 200;
+		discount = cost
 		if(Math.random() < 0.5)
     		discount = cost - random(5) * 10
+
 
 		periods.push({
     		startDate: dates[0].toLocaleDateString('en-CA'),
@@ -228,14 +239,14 @@ function genNewHouseReply(requestParams, response, context, ee, next) {
 /**
  * Select an house to download.
  */
-function selectHouse(context, events, done) {
-	if( houses.length > 0) {
-		context.vars.houseId = houses.sample()
-	} else {
-		delete context.vars.houseId
-	}
-	return done()
-}
+// function selectHouse(context, events, done) {
+// 	if( houses.length > 0) {
+// 		context.vars.houseId = houses.sample()
+// 	} else {
+// 		delete context.vars.houseId
+// 	}
+// 	return done()
+// }
 
 
 /**
@@ -278,8 +289,11 @@ function selectHouse(context, events, done) {
  */
 function selectPeriod(context, events, done) {
 	delete context.vars.value;
-	if(  typeof context.vars.house !== 'undefined') {
-		let periods = context.vars.house.periods	
+	if( typeof context.vars.rentalLst !== 'undefined' && 
+		context.vars.rentalLst.constructor == Array && 
+		context.vars.rentalLst.length > 0) {
+		let house = context.vars.rentalLst.sample()
+		let periods = house.periods	
 		if(periods == Array && periods.length > 0){	
 			
 			let period = periods.sample()
@@ -291,6 +305,7 @@ function selectPeriod(context, events, done) {
 					period : period
 				}
 				context.vars.rental = rental;
+				context.vars.houseId = house.id
 			} else {
 				delete context.vars.rental
 			}
