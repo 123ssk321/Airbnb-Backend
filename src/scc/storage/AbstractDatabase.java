@@ -331,9 +331,7 @@ public abstract class AbstractDatabase implements Database {
         if(!authRes.isOK())
             return Result.error(authRes.error());
 
-        var rentalDao = new RentalDAO(rental);
-        rentalDao.setHouseId(houseId);
-        return Result.ok(rentals.putRental(rentalDao).getItem().getId());
+        return Result.ok(rentals.putRental(new RentalDAO(rental)).getItem().getId());
     }
 
     public Result<Rental> updateRental(Cookie session, String houseId, String rentalId, Rental rentalToUpdate) {

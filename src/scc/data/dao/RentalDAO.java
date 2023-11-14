@@ -14,7 +14,7 @@ public class RentalDAO {
 
     public RentalDAO() {}
 
-    public RentalDAO(Rental r) {this(r.getId(), null, r.getTenantId(), r.getLandlordId(), r.getPeriod());}
+    public RentalDAO(Rental r) {this(r.getId(), r.getHouseId(), r.getTenantId(), r.getLandlordId(), r.getPeriod());}
 
     public RentalDAO(String id, String houseId, String tenantId, String landlordId, Period period) {
         super();
@@ -70,7 +70,7 @@ public class RentalDAO {
         this.period = period;
     }
     public Rental toRental() {
-        return new Rental(id, tenantId, landlordId, period);
+        return new Rental(id, houseId, tenantId, landlordId, period);
     }
     @Override
     public String toString() {

@@ -2,15 +2,17 @@ package scc.data.dto;
 
 public class Rental {
     private String id;
+    private String houseId;
     private String tenantId;
     private String landlordId;
     private Period period;
 
     public Rental() {}
 
-    public Rental(String id, String tenantId, String landlordId, Period period) {
+    public Rental(String id, String houseId, String tenantId, String landlordId, Period period) {
         super();
         this.id = id;
+        this.houseId = houseId;
         this.tenantId = tenantId;
         this.landlordId = landlordId;
         this.period = period;
@@ -21,6 +23,12 @@ public class Rental {
     }
     public void setId(String id) {
         this.id = id;
+    }
+    public String getHouseId() {
+        return houseId;
+    }
+    public void setHouseId(String houseId) {
+        this.houseId = houseId;
     }
     public String getTenantId() {
         return tenantId;
@@ -45,6 +53,7 @@ public class Rental {
     public String toString() {
         return "Rental [" +
                 "rental=" + id +
+                ", house=" + houseId +
                 ", tenant=" + tenantId +
                 ", landlord=" + landlordId +
                 ", period=" + period +
