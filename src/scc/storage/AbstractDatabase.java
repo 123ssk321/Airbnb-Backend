@@ -330,7 +330,7 @@ public abstract class AbstractDatabase implements Database {
         var authRes = checkCookie(session, rental.getTenantId());
         if(!authRes.isOK())
             return Result.error(authRes.error());
-
+        rental.setHouseId(houseId);
         return Result.ok(rentals.putRental(new RentalDAO(rental)).getItem().getId());
     }
 
