@@ -32,16 +32,19 @@ public class QuestionsCDB {
         container.patchItem(questionId, key, updateOps, QuestionDAO.class);
     }
 
-    public CosmosPagedIterable<QuestionDAO> getHouseQuestions(String houseId, Boolean answered) {
+    public CosmosPagedIterable<QuestionDAO> getHouseQuestions(String houseId, Boolean answered, int start, int length) {
         String query;
         if (answered == null)
-            query = "SELECT * FROM questions WHERE questions.houseId=\"" + houseId + "\"";
+            query = "SELECT * FROM questions WHERE questions.houseId=\"" + houseId + "\" "+
+                    "OFFSET " + start + " LIMIT " + length;
         else if (answered) {
             query = "SELECT * FROM questions WHERE questions.houseId=\"" + houseId + "\""
-                                            + " AND NOT IS_NULL(questions.reply)";
+                                            + " AND NOT IS_NULL(questions.reply) "+
+                    "OFFSET " + start + " LIMIT " + length;
         } else
             query = "SELECT * FROM questions WHERE questions.houseId=\"" + houseId + "\""
-                    + " AND IS_NULL(questions.reply)";
+                    + " AND IS_NULL(questions.reply) " +
+                    "OFFSET " + start + " LIMIT " + length;
 
         return container.queryItems(
                 query,

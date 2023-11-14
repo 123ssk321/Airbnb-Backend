@@ -58,7 +58,7 @@ scenarios:
             header: "set-cookie"
             as: "sessionId"
       - get:                          # Get rentals for the user (assuming rentals + houses + discount initial page)
-          url: "/users/{{ id }}/rental"
+          url: "/users/{{ id }}/rental?st=0&len=20"
           #cookie: "{{ sessionId }}"
           #name: "GET:/user/*/rentals"
           headers:
@@ -67,7 +67,7 @@ scenarios:
             json: "$"
             as: "rentalsLst"
       - get:                          # Get houses for the user (assuming rentals + houses + discount initial page)
-          url: "/users/{{ id }}/house"
+          url: "/users/{{ id }}/house?st=0&len=20"
           #cookie: "{{ sessionId }}"
           #name: "GET:/user/*/houses"
           headers:
@@ -85,7 +85,7 @@ scenarios:
             as: "housesDiscountLst"
       - loop:
         - get:                                   # Check houses for their rentals                          
-            url: "/house/{{ $loopElement.id }}/rental"
+            url: "/house/{{ $loopElement.id }}/rental?st=0&len=20"
             #cookie: "{{ sessionId }}"
             #name: "GET:/house/*/rental"
             headers:
@@ -94,7 +94,7 @@ scenarios:
               json: "$"
               as: "houseRentalsLst"
         - get:                                   # Get unanswered questions
-            url: "/house/{{ $loopElement.id }}/question?answered=false"
+            url: "/house/{{ $loopElement.id }}/question?answered=false?st=0&len=20"
             #name: "GET:/house/*/question"
             headers:
               Accept: application/json

@@ -36,12 +36,12 @@ public class UsersResource extends Resource implements RestUsers {
     }
 
     @Override
-    public List<House> listUserHouses(Cookie session, String ownerId) {
-        return super.getResult(() -> db.listUserHouses(session, ownerId));
+    public List<House> listUserHouses(Cookie session, String ownerId, int start, int length) {
+        return super.getResult(() -> db.listUserHouses(session, ownerId, start, length));
     }
 
     @Override
-    public List<Rental> listUserRentals(Cookie session, String userId) {
-        return super.getResult(() -> db.listUserRentals(session, userId));
+    public List<Rental> listUserRentals(Cookie session, String userId, int start, int length) {
+        return super.getResult(() -> db.listUserRentals(session, userId, start, length));
     }
 }

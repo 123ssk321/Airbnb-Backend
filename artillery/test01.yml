@@ -1,5 +1,5 @@
 config:
-  target: 'https://scc24appwesteurope57449.azurewebsites.net/rest'
+  target: 'https://scc24appwesteurope57418.azurewebsites.net/rest'
   plugins:
     metrics-by-endpoint:
       useOnlyRequestNames: true
@@ -57,15 +57,15 @@ scenarios:
             header: "set-cookie"
             as: "sessionId"
       - get:                          # Get rentals for the user (assuming rentals + houses + discount initial page)
-          url: "/users/{{ id }}/rental"
+          url: "/users/{{ id }}/rental?st=0&len=20"
           #cookie: "{{ sessionId }}"
           headers:
             Accept: application/json
-          capture: 
+          capture:
             json: "$"
             as: "rentalsLst"
       - get:                          # Get houses for the user (assuming rentals + houses + discount initial page)
-          url: "/user/{{ id }}/house"
+          url: "/users/{{ id }}/house?st=0&len=20"
           #cookie: "{{ sessionId }}"
           headers:
             Accept: application/json
@@ -73,7 +73,7 @@ scenarios:
             json: "$"
             as: "housesLst"
       - get:                          # Get generic discounted houses (assuming rentals + houses + discount initial page)
-          url: "/house/discount"
+          url: "/house/discount?st=0&len=20"
           headers:
             Accept: application/json
           capture: 
@@ -81,7 +81,7 @@ scenarios:
             as: "housesDiscountLst"
       - loop:                                   # Check houses for their rentals
         - get:                          
-            url: "/house/{{ $loopElement.houseId }}"
+            url: "/house/{{ $loopElement.houseId }}?st=0&len=20"
             headers:
               Accept: application/json
         over: "rentalsLst"

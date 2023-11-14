@@ -143,7 +143,7 @@ public abstract class AbstractDatabase implements Database {
         return updateOps;
     }
 
-    public Result<List<House>> listUserHouses(Cookie session, String ownerId) {
+    public Result<List<House>> listUserHouses(Cookie session, String ownerId, int start, int length) {
         if(ownerId == null || !this.hasUser(ownerId)){
             return Result.error(Response.Status.BAD_REQUEST);
         }
@@ -152,10 +152,10 @@ public abstract class AbstractDatabase implements Database {
         if(!authRes.isOK())
             return Result.error(authRes.error());
 
-        return Result.ok(houses.getHousesByOwner(ownerId).stream().map(HouseDAO::toHouse).toList());
+        return Result.ok(houses.getHousesByOwner(ownerId, start, length).stream().map(HouseDAO::toHouse).toList());
     }
 
-    public Result<List<Rental>> listUserRentals(Cookie session, String userId) {
+    public Result<List<Rental>> listUserRentals(Cookie session, String userId, int start, int length) {
         if(userId == null || !this.hasUser(userId)){
             return Result.error(Response.Status.BAD_REQUEST);
         }
@@ -164,7 +164,7 @@ public abstract class AbstractDatabase implements Database {
         if(!authRes.isOK())
             return Result.error(authRes.error());
 
-        return Result.ok(rentals.getRentalsByUser(userId).stream().map(RentalDAO::toRental).toList());
+        return Result.ok(rentals.getRentalsByUser(userId, start, length).stream().map(RentalDAO::toRental).toList());
     }
 
 
@@ -306,11 +306,11 @@ public abstract class AbstractDatabase implements Database {
         return Result.ok(houseDAO.toHouse());
     }
 
-    public Result<List<House>> searchHouses(String location, String startDate, String endDate) {
+    public Result<List<House>> searchHouses(String location, String startDate, String endDate, int start, int length) {
         if(location == null){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        return Result.ok(houses.searchHouses(location, startDate, endDate).stream().map(HouseDAO::toHouse).toList());
+        return Result.ok(houses.searchHouses(location, startDate, endDate, start, length).stream().map(HouseDAO::toHouse).toList());
     }
 
     /*-------------------------------------------------- RENTALS -----------------------------------------------------*/
@@ -363,7 +363,7 @@ public abstract class AbstractDatabase implements Database {
         return Result.ok(rentals.updateRental(rentalId, updateOps).getItem().toRental());
     }
 
-    public Result<List<Rental>> listHouseRentals(Cookie session, String houseId) {
+    public Result<List<Rental>> listHouseRentals(Cookie session, String houseId, int start, int length) {
         if(houseId == null)
             return Result.error(Response.Status.BAD_REQUEST);
 
@@ -380,11 +380,11 @@ public abstract class AbstractDatabase implements Database {
         if(!authRes.isOK())
             return Result.error(authRes.error());
 
-        return Result.ok(rentals.getRentalsByHouse(houseId).stream().map(RentalDAO::toRental).toList());
+        return Result.ok(rentals.getRentalsByHouse(houseId, start, length).stream().map(RentalDAO::toRental).toList());
     }
 
-    public Result<List<DiscountedRental>> listDiscountedRentals() {
-        return Result.ok(houses.getDiscountedHouses().stream().toList());
+    public Result<List<DiscountedRental>> listDiscountedRentals(int start, int length) {
+        return Result.ok(houses.getDiscountedHouses(start, length).stream().toList());
     }
 
     /*------------------------------------------------ QUESTIONS -----------------------------------------------------*/
@@ -436,7 +436,7 @@ public abstract class AbstractDatabase implements Database {
 
     }
 
-    public Result<List<Question>> listHouseQuestions(String houseId, Boolean answered) {
+    public Result<List<Question>> listHouseQuestions(String houseId, Boolean answered, int start, int length) {
         if (houseId == null) {
             return Result.error(Response.Status.BAD_REQUEST);
         }
@@ -444,7 +444,7 @@ public abstract class AbstractDatabase implements Database {
             return Result.error(Response.Status.NOT_FOUND);
         }
 
-        return Result.ok(questions.getHouseQuestions(houseId, answered).stream().map(QuestionDAO::toQuestion).toList());
+        return Result.ok(questions.getHouseQuestions(houseId, answered, start, length).stream().map(QuestionDAO::toQuestion).toList());
     }
 
 }

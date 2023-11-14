@@ -348,7 +348,7 @@ function decideNextAction(context, events, done) {
 
 	context.vars.nextAction = 1; // select location 
 	context.vars.location = locations.sample();
-	let date = generateRandomDates(new Date(2023, 11, 1), new Date())
+	let date = generateRandomDates(new Date(2023, 10, 1), new Date())
 	context.vars.initDate = date[0].toLocaleDateString('en-CA');
 	context.vars.endDate = date[1].toLocaleDateString('en-CA');
 

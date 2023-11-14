@@ -59,7 +59,7 @@ scenarios:
             as: "sessionId"
       - loop:                                  
         - get:                          # Get rentals for the user (assuming rentals + houses + discount initial page)
-            url: "/users/{{ id }}/rental"
+            url: "/users/{{ id }}/rental?st=0&len=20"
             #cookie: "{{ sessionId }}"
             #name: "GET:/user/*/rentals"
             headers:
@@ -68,7 +68,7 @@ scenarios:
               json: "$"
               as: "rentalsLst"
         - get:                          # Get houses for the user (assuming rentals + houses + discount initial page)
-            url: "/users/{{ id }}/house"
+            url: "/users/{{ id }}/house?st=0&len=20"
             #cookie: "{{ sessionId }}"
             #name: "GET:/user/*/houses"
             headers:
@@ -77,7 +77,7 @@ scenarios:
               json: "$"
               as: "housesLst"
         - get:                          # Get generic discounted houses (assuming rentals + houses + discount initial page)
-            url: "/house/discount"
+            url: "/house/discount?st=0&len=20"
             #cookie: "{{ sessionId }}"
             #name: "GET:/house/discount"
             headers:
@@ -88,7 +88,7 @@ scenarios:
         - function: "decideNextAction"
         ################################# Search location
         - get:                          
-            url: "/house?location={{ location }}&startDate={{ initDate }}&endDate={{ endDate }}"
+            url: "/house?location={{ location }}&startDate={{ initDate }}&endDate={{ endDate }}&st=0&len=20"
             #name: "GET:/house/*"
             headers:
               Accept: application/json
@@ -97,22 +97,22 @@ scenarios:
               as: "housesLst"
             ifTrue: "nextAction == 1"
         - function: "selectHouse"
-        # ################################# Browse next page
-        # - get:                          
-        #     url: "/house?discount=1&st=0&len=20"
-        #     name: "GET:/house/discount"
-        #     headers:
-        #       Accept: application/json
-        #     ifTrue: "afterNextAction == 0 and nextAction == 0"
-        # - get:                          
-        #     url: "/house?location={{ location }}&initDate={{ initDate }}$endDate={{ endDate }}&st=20&len=20"
-        #     name: "GET:/house/search"
-        #     headers:
-        #       Accept: application/json
-        #     ifTrue: "afterNextAction == 0 and nextAction == 1"
+         ################################# Browse next page
+        - get:
+             url: "/house?st=0&len=20"
+             name: "GET:/house/discount"
+             headers:
+               Accept: application/json
+             ifTrue: "afterNextAction == 0 and nextAction == 0"
+        - get:
+             url: "/house?location={{ location }}&initDate={{ initDate }}$endDate={{ endDate }}&st=20&len=20"
+             name: "GET:/house/search"
+             headers:
+               Accept: application/json
+             ifTrue: "afterNextAction == 0 and nextAction == 1"
         ################################# Check questions
         - get:                          
-            url: "/house/{{ houseId }}/question"
+            url: "/house/{{ houseId }}/question?st=0&len=20"
             #name: "GET:/house/*/question"
             headers:
               Accept: application/json

@@ -34,8 +34,8 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public List<House> searchHouses(String location, String startDate, String endDate) {
-        return super.getResult(() -> db.searchHouses(location, startDate, endDate));
+    public List<House> searchHouses(String location, String startDate, String endDate, int start, int length) {
+        return super.getResult(() -> db.searchHouses(location, startDate, endDate, start, length));
     }
 
     @Override
@@ -49,13 +49,13 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public List<Rental> listHouseRentals(Cookie session, String houseId) {
-        return super.getResult(() -> db.listHouseRentals(session, houseId));
+    public List<Rental> listHouseRentals(Cookie session, String houseId, int start, int length) {
+        return super.getResult(() -> db.listHouseRentals(session, houseId, start, length));
     }
 
     @Override
-    public List<DiscountedRental> listDiscountedRentals() {
-        return super.getResult(db::listDiscountedRentals);
+    public List<DiscountedRental> listDiscountedRentals(int start, int length) {
+        return super.getResult(() -> db.listDiscountedRentals(start, length));
     }
 
     @Override
@@ -69,8 +69,8 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public List<Question> listHouseQuestions(String houseId, Boolean answered) {
-        return super.getResult(() -> db.listHouseQuestions(houseId, answered));
+    public List<Question> listHouseQuestions(String houseId, Boolean answered, int start, int length) {
+        return super.getResult(() -> db.listHouseQuestions(houseId, answered, start, length));
     }
 
 }

@@ -50,13 +50,14 @@ public class HousesCDB {
         return container.patchItem(houseId, key, updateOps, HouseDAO.class);
     }
 
-    public CosmosPagedIterable<HouseDAO> searchHouses(String location, String startDate, String endDate) {
+    public CosmosPagedIterable<HouseDAO> searchHouses(String location, String startDate, String endDate, int start, int length) {
         if(startDate == null && endDate == null){
             return container.queryItems(
                     "SELECT DISTINCT houses.id, houses.name, houses.ownerId, houses.location, houses.description, houses.photoIds, houses.periods " +
                             "FROM houses " +
                             "JOIN p IN houses.periods " +
-                            "WHERE houses.location=\"" + location + "\" AND p.available = true",
+                            "WHERE houses.location=\"" + location + "\" AND p.available = true " +
+                            "OFFSET " + start + " LIMIT " + length,
                     new CosmosQueryRequestOptions(),
                     HouseDAO.class);
         }
@@ -64,12 +65,13 @@ public class HousesCDB {
                 "SELECT DISTINCT houses.id, houses.name, houses.ownerId, houses.location, houses.description, houses.photoIds, houses.periods " +
                         "FROM houses " +
                         "JOIN p IN houses.periods " +
-                        "WHERE houses.location=\"" + location + "\" AND p.available = true AND p.startDate >= \"" + startDate + "\" AND p.endDate <= \"" + endDate + "\"",
+                        "WHERE houses.location=\"" + location + "\" AND p.available = true AND p.startDate >= \"" + startDate + "\" AND p.endDate <= \"" + endDate + "\" " +
+                        "OFFSET " + start + " LIMIT " + length,
                 new CosmosQueryRequestOptions(),
                 HouseDAO.class);
     }
 
-    public CosmosPagedIterable<DiscountedRental> getDiscountedHouses() {
+    public CosmosPagedIterable<DiscountedRental> getDiscountedHouses(int start, int length) {
         var now = LocalDate.now();
         var in2Weeks = now.plusWeeks(2);
         Log.info("Getting discounted houses");
@@ -79,14 +81,16 @@ public class HousesCDB {
                         "FROM houses " +
                         "JOIN (SELECT p FROM p IN houses.periods " +
                             "WHERE p.promotionPrice <= p.price AND p.available = true " +
-                            "AND p.startDate >= \"" + now + "\" AND p.startDate <= \"" + in2Weeks + "\") AS availablePeriods",
+                            "AND p.startDate >= \"" + now + "\" AND p.startDate <= \"" + in2Weeks + "\") AS availablePeriods " +
+                        "OFFSET " + start + " LIMIT " + length,
                 new CosmosQueryRequestOptions(),
                 DiscountedRental.class);
     }
 
-    public CosmosPagedIterable<HouseDAO> getHousesByOwner(String ownerId) {
+    public CosmosPagedIterable<HouseDAO> getHousesByOwner(String ownerId, int start, int length) {
         return container.queryItems(
-                "SELECT * FROM houses WHERE houses.ownerId=\"" + ownerId + "\"",
+                "SELECT * FROM houses WHERE houses.ownerId=\"" + ownerId + "\" " +
+                        "OFFSET " + start + " LIMIT " + length,
                 new CosmosQueryRequestOptions(),
                 HouseDAO.class);
     }

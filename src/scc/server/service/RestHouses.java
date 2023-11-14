@@ -13,6 +13,8 @@ public interface RestHouses {
     String LOCATION = "location";
     String START_DATE= "starDate";
     String END_DATE= "endDate";
+    String START= "st";
+    String LENGTH= "len";
 
     /**
      * Creates a new house.
@@ -81,7 +83,9 @@ public interface RestHouses {
      *
      * @param location location to search
      * @param startDate starting date of the period
-     * @param startDate ending date of the period
+     * @param endDate ending date of the period
+     * @param start  the number of results to skip
+     * @param length  the number of results to return
      * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
      *         400 otherwise.
      */
@@ -89,7 +93,9 @@ public interface RestHouses {
     @Produces(MediaType.APPLICATION_JSON)
     List<House> searchHouses(@QueryParam(LOCATION) String location,
                              @QueryParam(START_DATE) String startDate,
-                             @QueryParam(END_DATE) String endDate);
+                             @QueryParam(END_DATE) String endDate,
+                             @QueryParam(START) int start,
+                             @QueryParam(LENGTH) int length);
 
     /**
      * Creates a new rental for a given house.
@@ -134,6 +140,8 @@ public interface RestHouses {
      *
      * @param session with login details
      * @param houseId the ID of the house.
+     * @param start  the number of results to skip
+     * @param length  the number of results to return
      * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
      *         401 if userId and password are incorrect.
      *         404 if houseId does not exist.
@@ -143,18 +151,23 @@ public interface RestHouses {
     @Path("/{houseId}/rental")
     @Produces(MediaType.APPLICATION_JSON)
     List<Rental> listHouseRentals(@CookieParam("scc:session") Cookie session,
-                                  @PathParam("houseId") String houseId);
+                                  @PathParam("houseId") String houseId,
+                                  @QueryParam(START) int start,
+                                  @QueryParam(LENGTH) int length);
 
     /**
      * Returns the list of discounted rentals in the near future (2 weeks).
      *
+     * @param start  the number of results to skip
+     * @param length  the number of results to return
      * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
      *         400 otherwise.
      */
     @GET
     @Path("/discount")
     @Produces(MediaType.APPLICATION_JSON)
-    List<DiscountedRental> listDiscountedRentals();
+    List<DiscountedRental> listDiscountedRentals(@QueryParam(START) int start,
+                                                 @QueryParam(LENGTH) int length);
 
     /**
      * Creates a new question for a given house.
@@ -198,6 +211,8 @@ public interface RestHouses {
      * If answered is true then returns questions with reply else question without reply.
      *
      * @param houseId the ID of the house
+     * @param start  the number of results to skip
+     * @param length  the number of results to return
      * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
      *         404 if the houseId does not exist.
      *         400 otherwise.
@@ -205,6 +220,8 @@ public interface RestHouses {
     @GET
     @Path("{houseId}/question")
     @Produces(MediaType.APPLICATION_JSON)
-    List<Question> listHouseQuestions(@PathParam("houseId") String houseId, @QueryParam("answered") Boolean answered);
-
+    List<Question> listHouseQuestions(@PathParam("houseId") String houseId,
+                                      @QueryParam("answered") Boolean answered,
+                                      @QueryParam(START) int start,
+                                      @QueryParam(LENGTH) int length);
 }

@@ -53,15 +53,17 @@ public class RentalsCDB {
         return container.patchItem(rentalId, key, updateOps, RentalDAO.class);
     }
 
-    public CosmosPagedIterable<RentalDAO> getRentalsByUser(String userId) {
+    public CosmosPagedIterable<RentalDAO> getRentalsByUser(String userId, int start, int length) {
         return container.queryItems(
-                "SELECT * FROM rentals WHERE rentals.tenantId=\"" + userId + "\"",
+                "SELECT * FROM rentals WHERE rentals.tenantId=\"" + userId + "\" " +
+                        "OFFSET " + start + " LIMIT " + length,
                 new CosmosQueryRequestOptions(),
                 RentalDAO.class);
     }
-    public CosmosPagedIterable<RentalDAO> getRentalsByHouse(String houseId) {
+    public CosmosPagedIterable<RentalDAO> getRentalsByHouse(String houseId, int start, int length) {
         return container.queryItems(
-                "SELECT * FROM rentals WHERE rentals.houseId=\"" + houseId + "\"",
+                "SELECT * FROM rentals WHERE rentals.houseId=\"" + houseId + "\" " +
+                        "OFFSET " + start + " LIMIT " + length,
                 new CosmosQueryRequestOptions(),
                 RentalDAO.class);
     }

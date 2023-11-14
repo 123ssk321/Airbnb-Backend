@@ -24,9 +24,9 @@ public interface Database {
     
     Result<User> updateUser(Cookie session, String userId, User user);
 
-    Result<List<House>> listUserHouses(Cookie session, String ownerId);
+    Result<List<House>> listUserHouses(Cookie session, String ownerId, int start, int length);
 
-    Result<List<Rental>> listUserRentals(Cookie session, String userId);
+    Result<List<Rental>> listUserRentals(Cookie session, String userId, int start, int length);
 
     /*---------------------------------------------------- MEDIA -----------------------------------------------------*/
 
@@ -44,7 +44,7 @@ public interface Database {
 
     Result<House> updateHouse(Cookie session, String houseId, House house);
 
-    Result<List<House>> searchHouses(String location, String startDate, String endDate);
+    Result<List<House>> searchHouses(String location, String startDate, String endDate, int start, int length);
 
     /*-------------------------------------------------- RENTALS -----------------------------------------------------*/
 
@@ -52,9 +52,9 @@ public interface Database {
 
     Result<Rental> updateRental(Cookie session, String houseId, String rentalId, Rental rental);
 
-    Result<List<Rental>> listHouseRentals(Cookie session, String houseId);
+    Result<List<Rental>> listHouseRentals(Cookie session, String houseId, int start, int length);
 
-    Result<List<DiscountedRental>> listDiscountedRentals();
+    Result<List<DiscountedRental>> listDiscountedRentals(int start, int length);
 
     /*------------------------------------------------ QUESTIONS -----------------------------------------------------*/
 
@@ -62,6 +62,6 @@ public interface Database {
 
     Result<String> createReply(Cookie session, String houseId, String questionId, Reply reply);
 
-    Result<List<Question>> listHouseQuestions(String houseId, Boolean answered);
+    Result<List<Question>> listHouseQuestions(String houseId, Boolean answered, int start, int length);
     
 }

@@ -12,6 +12,8 @@ import java.util.List;
 @Path(RestUsers.PATH)
 public interface RestUsers {
     String PATH="/users";
+    String START= "st";
+    String LENGTH= "len";
 
     /**
      * Creates a new user.
@@ -84,6 +86,8 @@ public interface RestUsers {
      *
      * @param session with login details
      * @param ownerId ID of the user
+     * @param start  the number of results to skip
+     * @param length  the number of results to return
      * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
      *         401 if userId and password are incorrect.
      *         400 otherwise.
@@ -92,13 +96,17 @@ public interface RestUsers {
     @Path("/{ownerId}/house")
     @Produces(MediaType.APPLICATION_JSON)
     List<House> listUserHouses(@CookieParam("scc:session") Cookie session,
-                               @PathParam("ownerId") String ownerId);
+                               @PathParam("ownerId") String ownerId,
+                               @QueryParam(START) int start,
+                               @QueryParam(LENGTH) int length);
 
     /**
      * Returns the list of rentals for a given user.
      *
      * @param session with login details
-     * @param userId the ID of the user.
+     * @param userId the ID of the user
+     * @param start  the number of results to skip
+     * @param length  the number of results to return
      * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
      *         401 if userId and password are incorrect.
      *         404 if user does not exist.
@@ -108,6 +116,8 @@ public interface RestUsers {
     @Path("/{userId}/rental")
     @Produces(MediaType.APPLICATION_JSON)
     List<Rental> listUserRentals(@CookieParam("scc:session") Cookie session,
-                                 @PathParam("userId") String userId);
+                                 @PathParam("userId") String userId,
+                                 @QueryParam(START) int start,
+                                 @QueryParam(LENGTH) int length);
 
 }
