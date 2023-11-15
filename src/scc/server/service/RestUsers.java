@@ -2,6 +2,7 @@ package scc.server.service;
 
 import jakarta.ws.rs.core.Cookie;
 import scc.data.dto.House;
+import scc.data.dto.HouseOwner;
 import scc.data.dto.Rental;
 import scc.data.dto.User;
 import jakarta.ws.rs.*;
@@ -95,10 +96,10 @@ public interface RestUsers {
     @GET
     @Path("/{ownerId}/house")
     @Produces(MediaType.APPLICATION_JSON)
-    List<House> listUserHouses(@CookieParam("scc:session") Cookie session,
-                               @PathParam("ownerId") String ownerId,
-                               @QueryParam(START) int start,
-                               @QueryParam(LENGTH) int length);
+    List<HouseOwner> listUserHouses(@CookieParam("scc:session") Cookie session,
+                                    @PathParam("ownerId") String ownerId,
+                                    @QueryParam(START) int start,
+                                    @QueryParam(LENGTH) int length);
 
     /**
      * Returns the list of rentals for a given user.

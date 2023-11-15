@@ -143,7 +143,7 @@ public abstract class AbstractDatabase implements Database {
         return updateOps;
     }
 
-    public Result<List<House>> listUserHouses(Cookie session, String ownerId, int start, int length) {
+    public Result<List<HouseOwner>> listUserHouses(Cookie session, String ownerId, int start, int length) {
         if(ownerId == null || !this.hasUser(ownerId)){
             return Result.error(Response.Status.BAD_REQUEST);
         }
@@ -152,7 +152,7 @@ public abstract class AbstractDatabase implements Database {
         if(!authRes.isOK())
             return Result.error(authRes.error());
 
-        return Result.ok(houses.getHousesByOwner(ownerId, start, length).stream().map(HouseDAO::toHouse).toList());
+        return Result.ok(houses.getHousesByOwner(ownerId, start, length).stream().toList());
     }
 
     public Result<List<Rental>> listUserRentals(Cookie session, String userId, int start, int length) {
@@ -306,11 +306,11 @@ public abstract class AbstractDatabase implements Database {
         return Result.ok(houseDAO.toHouse());
     }
 
-    public Result<List<House>> searchHouses(String location, String startDate, String endDate, int start, int length) {
+    public Result<List<HouseList>> searchHouses(String location, String startDate, String endDate, int start, int length) {
         if(location == null){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        return Result.ok(houses.searchHouses(location, startDate, endDate, start, length).stream().map(HouseDAO::toHouse).toList());
+        return Result.ok(houses.searchHouses(location, startDate, endDate, start, length).stream().toList());
     }
 
     /*-------------------------------------------------- RENTALS -----------------------------------------------------*/

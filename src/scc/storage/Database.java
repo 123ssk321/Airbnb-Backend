@@ -24,7 +24,7 @@ public interface Database {
     
     Result<User> updateUser(Cookie session, String userId, User user);
 
-    Result<List<House>> listUserHouses(Cookie session, String ownerId, int start, int length);
+    Result<List<HouseOwner>> listUserHouses(Cookie session, String ownerId, int start, int length);
 
     Result<List<Rental>> listUserRentals(Cookie session, String userId, int start, int length);
 
@@ -44,7 +44,7 @@ public interface Database {
 
     Result<House> updateHouse(Cookie session, String houseId, House house);
 
-    Result<List<House>> searchHouses(String location, String startDate, String endDate, int start, int length);
+    Result<List<HouseList>> searchHouses(String location, String startDate, String endDate, int start, int length);
 
     /*-------------------------------------------------- RENTALS -----------------------------------------------------*/
 

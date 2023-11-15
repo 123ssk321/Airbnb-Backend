@@ -2,6 +2,7 @@ package scc.server.resources;
 
 import jakarta.ws.rs.core.Cookie;
 import scc.data.dto.House;
+import scc.data.dto.HouseOwner;
 import scc.data.dto.Rental;
 import scc.data.dto.User;
 import scc.server.service.RestUsers;
@@ -36,7 +37,7 @@ public class UsersResource extends Resource implements RestUsers {
     }
 
     @Override
-    public List<House> listUserHouses(Cookie session, String ownerId, int start, int length) {
+    public List<HouseOwner> listUserHouses(Cookie session, String ownerId, int start, int length) {
         return super.getResult(() -> db.listUserHouses(session, ownerId, start, length));
     }
 

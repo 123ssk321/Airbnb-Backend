@@ -5,6 +5,8 @@ import com.azure.cosmos.models.*;
 import com.azure.cosmos.util.CosmosPagedIterable;
 import scc.data.dao.HouseDAO;
 import scc.data.dto.DiscountedRental;
+import scc.data.dto.HouseList;
+import scc.data.dto.HouseOwner;
 
 import java.time.LocalDate;
 import java.util.logging.Logger;
@@ -50,25 +52,25 @@ public class HousesCDB {
         return container.patchItem(houseId, key, updateOps, HouseDAO.class);
     }
 
-    public CosmosPagedIterable<HouseDAO> searchHouses(String location, String startDate, String endDate, int start, int length) {
+    public CosmosPagedIterable<HouseList> searchHouses(String location, String startDate, String endDate, int start, int length) {
         if(startDate == null && endDate == null){
             return container.queryItems(
-                    "SELECT DISTINCT houses.id, houses.name, houses.ownerId, houses.location, houses.description, houses.photoIds, houses.periods " +
+                    "SELECT DISTINCT houses.id, houses.name, houses.location, houses.photoIds[0] as photoId, p as period " +
                             "FROM houses " +
                             "JOIN p IN houses.periods " +
                             "WHERE houses.location=\"" + location + "\" AND p.available = true " +
                             "OFFSET " + start + " LIMIT " + length,
                     new CosmosQueryRequestOptions(),
-                    HouseDAO.class);
+                    HouseList.class);
         }
         return container.queryItems(
-                "SELECT DISTINCT houses.id, houses.name, houses.ownerId, houses.location, houses.description, houses.photoIds, houses.periods " +
+                "SELECT DISTINCT houses.id, houses.name, houses.location, houses.photoIds[0] as photoId, p as period " +
                         "FROM houses " +
                         "JOIN p IN houses.periods " +
                         "WHERE houses.location=\"" + location + "\" AND p.available = true AND p.startDate >= \"" + startDate + "\" AND p.endDate <= \"" + endDate + "\" " +
                         "OFFSET " + start + " LIMIT " + length,
                 new CosmosQueryRequestOptions(),
-                HouseDAO.class);
+                HouseList.class);
     }
 
     public CosmosPagedIterable<DiscountedRental> getDiscountedHouses(int start, int length) {
@@ -87,12 +89,13 @@ public class HousesCDB {
                 DiscountedRental.class);
     }
 
-    public CosmosPagedIterable<HouseDAO> getHousesByOwner(String ownerId, int start, int length) {
+    public CosmosPagedIterable<HouseOwner> getHousesByOwner(String ownerId, int start, int length) {
         return container.queryItems(
-                "SELECT * FROM houses WHERE houses.ownerId=\"" + ownerId + "\" " +
+                "SELECT houses.id, houses.name, houses.ownerId, houses.location, houses.photoIds[0] as photoId " +
+                        "FROM houses WHERE houses.ownerId=\"" + ownerId + "\" " +
                         "OFFSET " + start + " LIMIT " + length,
                 new CosmosQueryRequestOptions(),
-                HouseDAO.class);
+                HouseOwner.class);
     }
 
 }

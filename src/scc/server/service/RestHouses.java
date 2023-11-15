@@ -91,7 +91,7 @@ public interface RestHouses {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    List<House> searchHouses(@QueryParam(LOCATION) String location,
+    List<HouseList> searchHouses(@QueryParam(LOCATION) String location,
                              @QueryParam(START_DATE) String startDate,
                              @QueryParam(END_DATE) String endDate,
                              @QueryParam(START) int start,
