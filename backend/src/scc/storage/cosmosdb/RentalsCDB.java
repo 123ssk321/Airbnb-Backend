@@ -3,7 +3,6 @@ package scc.storage.cosmosdb;
 import com.azure.cosmos.CosmosContainer;
 import com.azure.cosmos.models.*;
 import com.azure.cosmos.util.CosmosPagedIterable;
-import scc.data.dao.HouseDAO;
 import scc.data.dao.RentalDAO;
 
 import java.util.logging.Logger;

@@ -1,7 +1,7 @@
 package scc.data.dao;
 
-import scc.data.dto.User;
 import scc.utils.Hash;
+import scc.data.dto.User;
 
 import java.util.Arrays;
 

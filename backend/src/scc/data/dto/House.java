@@ -1,13 +1,9 @@
-package scc.data.dao;
-
-import scc.data.dto.House;
-import scc.data.dto.Period;
+package scc.data.dto;
 
 import java.util.Arrays;
 
-public class HouseDAO {
-    private String _rid;
-    private String _ts;
+
+public class House {
     private String id;
     private String name;
     private String ownerId;
@@ -16,12 +12,7 @@ public class HouseDAO {
     private String[] photoIds;
     private Period[] periods;
 
-
-    public HouseDAO() {}
-
-    public HouseDAO(House h) {this(h.getId(), h.getName(), h.getOwnerId(), h.getLocation(), h.getDescription(), h.getPhotoIds(), h.getPeriods());}
-
-    public HouseDAO(String id, String name, String ownerId, String location, String description, String[] photoIds, Period[] periods) {
+    public House(String id, String name, String ownerId, String location, String description, String[] photoIds, Period[] periods) {
         super();
         this.id = id;
         this.name = name;
@@ -32,21 +23,8 @@ public class HouseDAO {
         this.periods = periods;
     }
 
-    public String get_rid() {
-        return _rid;
-    }
+    public House(){}
 
-    public void set_rid(String _rid) {
-        this._rid = _rid;
-    }
-
-    public String get_ts() {
-        return _ts;
-    }
-
-    public void set_ts(String _ts) {
-        this._ts = _ts;
-    }
     public String getId() {
         return id;
     }
@@ -90,18 +68,13 @@ public class HouseDAO {
         this.periods = periods;
     }
 
-    public House toHouse() {
-        return new House(id, name, ownerId, location, description, photoIds == null? null : Arrays.copyOf(photoIds, photoIds.length),
-                periods == null? null : Arrays.copyOf(periods, periods.length));
-    }
     @Override
     public String toString() {
-        return "HouseDAO [_rid=" + _rid +
-                ", _ts=" + _ts +
-                ", name=" + name +
-                ", owner=" + ownerId +
+        return "House [" +
+                "name=" + name +
+                ", ownerId=" + ownerId +
                 ", location=" + location +
-                ", description='" + description +
+                ", description=" + description +
                 ", photos=" + Arrays.toString(photoIds) +
                 ", periods=" + Arrays.toString(periods) +
                 ']';

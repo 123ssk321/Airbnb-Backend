@@ -10,7 +10,7 @@ public class RedisCache {
 	private static JedisPool instance;
 	private final ObjectMapper mapper;
 	public RedisCache(){ mapper = new ObjectMapper();}
-	private synchronized JedisPool getCachePool() {
+	public static synchronized JedisPool getCachePool() {
 		if( instance != null)
 			return instance;
 		final JedisPoolConfig poolConfig = new JedisPoolConfig();
