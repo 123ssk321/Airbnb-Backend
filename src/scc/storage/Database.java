@@ -46,6 +46,9 @@ public interface Database {
 
     Result<List<HouseList>> searchHouses(String location, String startDate, String endDate, int start, int length);
 
+    Result<List<HouseSearch>> searchByNameAndDescription(String queryText, String ownerId, Boolean useName,
+                                                         Boolean useDescription, int start, int length);
+
     /*-------------------------------------------------- RENTALS -----------------------------------------------------*/
 
     Result<String> createRental(Cookie session, String houseId, Rental rental);
@@ -63,5 +66,5 @@ public interface Database {
     Result<String> createReply(Cookie session, String houseId, String questionId, Reply reply);
 
     Result<List<Question>> listHouseQuestions(String houseId, Boolean answered, int start, int length);
-    
+
 }

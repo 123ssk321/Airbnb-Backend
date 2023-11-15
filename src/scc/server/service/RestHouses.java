@@ -224,4 +224,29 @@ public interface RestHouses {
                                       @QueryParam("answered") Boolean answered,
                                       @QueryParam(START) int start,
                                       @QueryParam(LENGTH) int length);
+
+    /**
+     * Returns a list of houses using the Cognitive Search Azure resource, searching by name and the
+     * description of the house. Can also filter by ownerId.
+     * @param query the query to search
+     * @param ownerId  the owner to filter the results
+     * @param useName to filter by name
+     * @param useDescription to filter by description
+     * @param start  the number of results to skip
+     * @param length  the number of results to return
+     * @return 200 when the search is successful, regardless of the number of hits (including 0 hits)
+     *         404 if the houseId does not exist.
+     *         400 otherwise.
+     */
+    @GET
+    @Path("/search")
+    @Produces(MediaType.APPLICATION_JSON)
+    List<HouseSearch> searchByNameAndDescription(@QueryParam("query") String query,
+                                           @QueryParam("ownerId") String ownerId,
+                                           @QueryParam("useName") Boolean useName,
+                                           @QueryParam("useDesc") Boolean useDescription,
+                                           @QueryParam(START) int start,
+                                           @QueryParam(LENGTH) int length);
+
+
 }

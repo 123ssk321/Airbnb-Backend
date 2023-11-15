@@ -12,6 +12,11 @@
     <dependencies>
         <dependency>
             <groupId>com.azure</groupId>
+            <artifactId>azure-search-documents</artifactId>
+            <version>11.5.12</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
             <artifactId>azure-identity</artifactId>
             <version>1.10.1</version>
             <scope>compile</scope>

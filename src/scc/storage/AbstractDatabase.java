@@ -10,6 +10,8 @@ import scc.data.dao.QuestionDAO;
 import scc.data.dao.RentalDAO;
 import scc.data.dao.UserDAO;
 import scc.data.dto.*;
+import scc.mgt.AzureProperties;
+import scc.mgt.CognitiveSearch;
 import scc.server.auth.LoginDetails;
 import scc.server.resources.MediaResource;
 import scc.storage.cosmosdb.HousesCDB;
@@ -32,6 +34,7 @@ public abstract class AbstractDatabase implements Database {
     protected final RentalsCDB rentals;
     protected final QuestionsCDB questions;
     protected static final Logger Log = Logger.getLogger(AbstractDatabase.class.getName());
+    protected final CognitiveSearch cognitiveSearch;
 
     protected AbstractDatabase(CosmosClient cClient,
                          String cosmosdbDatabase,
@@ -48,6 +51,11 @@ public abstract class AbstractDatabase implements Database {
         rentals = new RentalsCDB(db.getContainer(rentalCosmosDBContainerName));
         questions = new QuestionsCDB(db.getContainer(questionCosmosDBContainerName));
         media = new MediaBlobStorage(userBlobContainer, houseBlobContainer);
+
+        if(System.getenv(AzureProperties.USE_COG_SEARCH).equals(AzureProperties.USE_COG_SEARCH_TRUE))
+            cognitiveSearch = new CognitiveSearch();
+        else
+            cognitiveSearch = null;
     }
 
     /*---------------------------------------------------- AUTH ------------------------------------------------------*/
@@ -311,6 +319,15 @@ public abstract class AbstractDatabase implements Database {
             return Result.error(Response.Status.BAD_REQUEST);
         }
         return Result.ok(houses.searchHouses(location, startDate, endDate, start, length).stream().toList());
+    }
+
+    public Result<List<HouseSearch>> searchByNameAndDescription(String queryText, String ownerId, Boolean useName,
+                                                        Boolean useDescription, int start, int length) {
+
+        if(cognitiveSearch == null)
+            return  Result.ok();
+
+        return Result.ok(cognitiveSearch.searchHouses(queryText, ownerId, useName, useDescription, start, length));
     }
 
     /*-------------------------------------------------- RENTALS -----------------------------------------------------*/

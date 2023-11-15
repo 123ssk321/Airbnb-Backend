@@ -39,6 +39,13 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
+    public List<HouseSearch> searchByNameAndDescription(String queryText, String ownerId, Boolean useName,
+                                                        Boolean useDescription, int start, int length) {
+        return super.getResult(() -> db.searchByNameAndDescription(queryText, ownerId, useName,
+                useDescription, start, length));
+    }
+
+    @Override
     public String createRental(Cookie session, String houseId, Rental rental) {
         return super.getResult(() -> db.createRental(session, houseId, rental));
     }

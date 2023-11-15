@@ -12,9 +12,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
+import com.azure.core.http.rest.PagedIterable;
 import com.azure.resourcemanager.*;
 import com.azure.resourcemanager.resources.models.*;
 import com.azure.resourcemanager.resources.fluentcore.model.Creatable;
+import com.azure.resourcemanager.search.models.QueryKey;
+import com.azure.resourcemanager.search.models.SearchService;
 import com.azure.resourcemanager.storage.models.*;
 import com.azure.resourcemanager.cosmos.models.*;
 import com.azure.resourcemanager.cosmos.models.CosmosDBAccount.DefinitionStages.*;
@@ -35,15 +38,19 @@ import com.azure.cosmos.models.UniqueKeyPolicy;
 
 public class AzureManagement {
 	// TODO: These variable allow you to control what is being created
-	static final boolean CREATE_STORAGE = true;
-	static final boolean CREATE_COSMOSDB = true;
-	static final boolean CREATE_REDIS = true;
+	static final boolean CREATE_STORAGE = false;
+	static final boolean CREATE_COSMOSDB = false;
+	static final boolean CREATE_REDIS = false;
+	static final boolean CREATE_SEARCH = false;
 
 	// TODO: change your suffix and other names if you want
-	static final String MY_SUFFIX = "57449"; // Add your suffix here
+	static final String MY_SUFFIX = "57418"; // Add your suffix here
 	
 	static final String AZURE_COSMOSDB_NAME = "scc24" + MY_SUFFIX;	// Cosmos DB account name
 	static final String AZURE_COSMOSDB_DATABASE = "scc24db" + MY_SUFFIX;	// Cosmos DB database name
+
+	static final String AZURE_SEARCH_SERVICE = "scc24cs" + MY_SUFFIX;
+
 	static final String[] BLOB_CONTAINERS = { "users", "houses" };	// TODO: Containers to add to the blob storage
 
 	static final Region[] REGIONS = new Region[] { Region.EUROPE_WEST}; // Define the regions to deploy resources here
@@ -94,6 +101,18 @@ public class AzureManagement {
 	public static ResourceGroup createResourceGroup(AzureResourceManager azure, String rgName, Region region) {
 		ResourceGroup resourceGroup = azure.resourceGroups().define(rgName).withRegion(region).create();
 		return resourceGroup;
+	}
+
+	private static void appendInfo( StringBuffer cmd, String name, String rgName, String propName, String value) {
+		cmd.append("az functionapp config appsettings set --name ");
+		cmd.append(name);
+		cmd.append(" --resource-group ");
+		cmd.append(rgName);
+		cmd.append(" --settings \"");
+		cmd.append(propName);
+		cmd.append("=");
+		cmd.append(value);
+		cmd.append("\"\n");
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -152,22 +171,10 @@ public class AzureManagement {
 		}
 		StringBuffer cmd = new StringBuffer();
 		if (functionName != null) {
-			cmd.append("az functionapp config appsettings set --name ");
-			cmd.append(functionName);
-			cmd.append(" --resource-group ");
-			cmd.append(rgName);
-			cmd.append(" --settings \"BlobStoreConnection=");
-			cmd.append(key);
-			cmd.append("\"\n");
+			appendInfo( cmd, functionName, rgName, "BlobStoreConnection", key);
 		}
 		if (appName != null) {
-			cmd.append("az functionapp config appsettings set --name ");
-			cmd.append(appName);
-			cmd.append(" --resource-group ");
-			cmd.append(rgName);
-			cmd.append(" --settings \"BlobStoreConnection=");
-			cmd.append(key);
-			cmd.append("\"\n");
+			appendInfo( cmd, appName, rgName, "BlobStoreConnection", key);
 		}
 		synchronized (AzureManagement.class) {
 			Files.write(Paths.get(settingsFilename), cmd.toString().getBytes(), StandardOpenOption.APPEND);
@@ -218,39 +225,15 @@ public class AzureManagement {
 
 		StringBuffer cmd = new StringBuffer();
 		if (appName != null) {
-			cmd.append("az functionapp config appsettings set --name ");
-			cmd.append(appName);
-			cmd.append(" --resource-group ");
-			cmd.append(rgName);
-			cmd.append(" --settings \"COSMOSDB_KEY=");
-			cmd.append(account.listKeys().primaryMasterKey());
-			cmd.append("\"\n");
-			cmd.append("az functionapp config appsettings set --name ");
-			cmd.append(appName);
-			cmd.append(" --resource-group ");
-			cmd.append(rgName);
-			cmd.append(" --settings \"COSMOSDB_URL=");
-			cmd.append(account.documentEndpoint());
-			cmd.append("\"\n");
-			cmd.append("az functionapp config appsettings set --name ");
-			cmd.append(appName);
-			cmd.append(" --resource-group ");
-			cmd.append(rgName);
-			cmd.append(" --settings \"COSMOSDB_DATABASE=");
-			cmd.append(databaseName);
-			cmd.append("\"\n");
+			appendInfo( cmd, appName, rgName, "COSMOSDB_KEY", account.listKeys().primaryMasterKey());
+			appendInfo( cmd, appName, rgName, "COSMOSDB_URL", account.documentEndpoint());
+			appendInfo( cmd, appName, rgName, "COSMOSDB_DATABASE", databaseName);
 		}
 		if (functionName != null) {
-			cmd.append("az functionapp config appsettings set --name ");
-			cmd.append(functionName);
-			cmd.append(" --resource-group ");
-			cmd.append(rgName);
-			cmd.append(" --settings \"AzureCosmosDBConnection=AccountEndpoint=");
-			cmd.append(account.documentEndpoint());
-			cmd.append(";AccountKey=");
-			cmd.append(account.listKeys().primaryMasterKey());
-			cmd.append(";\"");
-			cmd.append("\n");
+			String keyValue = "AccountEndpoint=" + account.documentEndpoint() +
+					";AccountKey=" + account.listKeys().primaryMasterKey() + ";" ;
+
+			appendInfo( cmd, functionName, rgName, "AzureCosmosDBConnection", keyValue);
 		}
 		synchronized (AzureManagement.class) {
 			Files.write(Paths.get(settingsFilename), cmd.toString().getBytes(), StandardOpenOption.APPEND);
@@ -332,69 +315,94 @@ public class AzureManagement {
 		}
 		StringBuffer cmd = new StringBuffer();
 		if (appName != null) {
-			cmd.append("az functionapp config appsettings set --name ");
-			cmd.append(appName);
-			cmd.append(" --resource-group ");
-			cmd.append(rgName);
-			cmd.append(" --settings \"REDIS_KEY=");
-			cmd.append(redisAccessKey.primaryKey());
-			cmd.append("\"\n");
-			cmd.append("az functionapp config appsettings set --name ");
-			cmd.append(appName);
-			cmd.append(" --resource-group ");
-			cmd.append(rgName);
-			cmd.append(" --settings \"REDIS_URL=");
-			cmd.append(cache.hostname());
-			cmd.append("\"\n");
+			appendInfo( cmd, appName, rgName, "REDIS_KEY", redisAccessKey.primaryKey());
+			appendInfo( cmd, appName, rgName, "REDIS_URL", cache.hostname());
+			appendInfo( cmd, appName, rgName, "USE_CACHE", "TRUE");
 		}
 		if (functionName != null) {
-			cmd.append("az functionapp config appsettings set --name ");
-			cmd.append(functionName);
-			cmd.append(" --resource-group ");
-			cmd.append(rgName);
-			cmd.append(" --settings \"REDIS_KEY=");
-			cmd.append(redisAccessKey.primaryKey());
-			cmd.append("\"\n");
-			cmd.append("az functionapp config appsettings set --name ");
-			cmd.append(functionName);
-			cmd.append(" --resource-group ");
-			cmd.append(rgName);
-			cmd.append(" --settings \"REDIS_URL=");
-			cmd.append(cache.hostname());
-			cmd.append("\"\n");
+			appendInfo( cmd, functionName, rgName, "REDIS_KEY", redisAccessKey.primaryKey());
+			appendInfo( cmd, functionName, rgName, "REDIS_URL", cache.hostname());
+			appendInfo( cmd, functionName, rgName, "USE_CACHE", "TRUE");
 		}
 		synchronized (AzureManagement.class) {
 			Files.write(Paths.get(settingsFilename), cmd.toString().getBytes(), StandardOpenOption.APPEND);
 		}
-		dumpDisableRedisCacheInfo(settingsFilename, appName, functionName, rgName, "TRUE");
 	}
 
-	public synchronized static void dumpDisableRedisCacheInfo(String settingsFilename,
-															  String appName, String functionName,
-															  String rgName, String useCache)throws IOException{
+	public synchronized static void dumpDisableResourceInfo(String settingsFilename,
+															String appName, String functionName,
+															String rgName, String resourceName)throws IOException{
 		StringBuffer cmd = new StringBuffer();
 		if (appName != null) {
-			cmd.append("az functionapp config appsettings set --name ");
-			cmd.append(appName);
-			cmd.append(" --resource-group ");
-			cmd.append(rgName);
-			cmd.append(" --settings \"USE_CACHE=");
-			cmd.append(useCache);
-			cmd.append("\"\n");
+			appendInfo( cmd, appName, rgName, resourceName, "FALSE");
 		}
 		if (functionName != null) {
-			cmd.append("az functionapp config appsettings set --name ");
-			cmd.append(appName);
-			cmd.append(" --resource-group ");
-			cmd.append(rgName);
-			cmd.append(" --settings \"USE_CACHE=");
-			cmd.append(useCache);
-			cmd.append("\"\n");
+			appendInfo( cmd, functionName, rgName, resourceName, "FALSE");
 		}
 		synchronized (AzureManagement.class) {
 			Files.write(Paths.get(settingsFilename), cmd.toString().getBytes(), StandardOpenOption.APPEND);
 		}
 	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////// COGNITIVE SEARCH CODE
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	public synchronized static void dumpCognitiveSearchInfo(AzureResourceManager azure, String propFilename, String settingsFilename,
+													   String appName, String functionName, String rgName)
+			throws IOException {
+
+		for (SearchService srv : azure.searchServices().list()) {
+			if (!srv.name().equalsIgnoreCase(AZURE_SEARCH_SERVICE)){
+				continue;
+			}
+
+			Files.write(Paths.get(propFilename), ("SearchServiceName=" + AZURE_SEARCH_SERVICE + "\n").getBytes(),
+							StandardOpenOption.APPEND);
+			Files.write(Paths.get(propFilename),
+					("SearchServiceAdminKey=" + srv.getAdminKeys().primaryKey() + "\n").getBytes(),
+					StandardOpenOption.APPEND);
+			PagedIterable<QueryKey> lst = srv.listQueryKeys();
+			if (lst == null)
+				srv.createQueryKey("newquerykey");
+			lst = srv.listQueryKeys();
+			QueryKey qk = lst.iterator().next();
+			Files.write(Paths.get(propFilename),
+					("SearchServiceQueryKey=" + qk.key() + "\n").getBytes(),
+					StandardOpenOption.APPEND);
+			Files.write(Paths.get(propFilename), ("SearchServiceUrl=https://" + AZURE_SEARCH_SERVICE + ".search.windows.net\n").getBytes(),
+					StandardOpenOption.APPEND);
+			Files.write(Paths.get(propFilename), ("IndexName=cosmosdb-index\n").getBytes(),
+					StandardOpenOption.APPEND);
+			Files.write(Paths.get(propFilename), ("ApiVersion=2023-07-01-Preview\n").getBytes(),
+					StandardOpenOption.APPEND);
+
+			StringBuffer cmd = new StringBuffer();
+			if (functionName != null) {
+				appendInfo( cmd, functionName, rgName, "SearchServiceName", AZURE_SEARCH_SERVICE);
+				appendInfo( cmd, functionName, rgName, "SearchServiceAdminKey", srv.getAdminKeys().primaryKey());
+				appendInfo( cmd, functionName, rgName, "SearchServiceQueryKey", qk.key());
+				appendInfo( cmd, functionName, rgName, "SearchServiceUrl", "https://" + AZURE_SEARCH_SERVICE + ".search.windows.net");
+				appendInfo( cmd, functionName, rgName, "IndexName", "cosmosdb-index"); //TODO: replace
+				appendInfo( cmd, functionName, rgName, "ApiVersion", "2020-06-30");
+				appendInfo( cmd, functionName, rgName, "USE_COG_SEARCH", "TRUE");
+			}
+			if (appName != null) {
+				appendInfo( cmd, appName, rgName, "SearchServiceName", AZURE_SEARCH_SERVICE);
+				appendInfo( cmd, appName, rgName, "SearchServiceAdminKey", srv.getAdminKeys().primaryKey());appendInfo( cmd, appName, rgName, "SearchServiceQueryKey", qk.key());
+				appendInfo( cmd, appName, rgName, "SearchServiceUrl", "https://" + AZURE_SEARCH_SERVICE + ".search.windows.net");
+				appendInfo( cmd, appName, rgName, "IndexName", "cosmosdb-index"); //TODO: replace
+				appendInfo( cmd, appName, rgName, "ApiVersion", "2020-06-30");
+				appendInfo( cmd, appName, rgName, "USE_COG_SEARCH", "TRUE");
+			}
+			synchronized (AzureManagement.class) {
+				Files.write(Paths.get(settingsFilename), cmd.toString().getBytes(), StandardOpenOption.APPEND);
+			}
+		}
+	}
+
+
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////// AZURE DELETE CODE
@@ -520,8 +528,31 @@ public class AzureManagement {
 					threads.add(th);
 				}else {
 					for (int i = 0; i < REGIONS.length; i++) {
-						dumpDisableRedisCacheInfo(AZURE_SETTINGS_LOCATIONS[i], AZURE_APP_NAME[i], AZURE_FUNCTIONS_NAME[i],
-								AZURE_RG_REGIONS[i], "FALSE");
+						dumpDisableResourceInfo(AZURE_SETTINGS_LOCATIONS[i], AZURE_APP_NAME[i], AZURE_FUNCTIONS_NAME[i],
+								AZURE_RG_REGIONS[i], "USE_CACHE");
+					}
+				}
+
+				if(CREATE_SEARCH){
+					Thread th = new Thread(() -> {
+						try {
+							final AzureResourceManager azure0 = createManagementClient();
+							for (int i = 0; i < REGIONS.length; i++) {
+								dumpCognitiveSearchInfo(azure0, AZURE_PROPS_LOCATIONS[i],AZURE_SETTINGS_LOCATIONS[i], AZURE_APP_NAME[i],
+										AZURE_FUNCTIONS_NAME[i], AZURE_RG_REGIONS[i]);
+							}
+							System.err.println("Azure Cognitive Search resources dumped with success");
+						} catch (Exception e) {
+							System.err.println("Error while dumping Cognitive Search resources");
+							e.printStackTrace();
+						}
+					});
+					th.start();
+					threads.add(th);
+				}else {
+					for (int i = 0; i < REGIONS.length; i++) {
+						dumpDisableResourceInfo(AZURE_SETTINGS_LOCATIONS[i], AZURE_APP_NAME[i], AZURE_FUNCTIONS_NAME[i],
+								AZURE_RG_REGIONS[i], "USE_COG_SEARCH");
 					}
 				}
 
