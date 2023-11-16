@@ -1,6 +1,7 @@
 package scc.storage;
 
 import com.azure.cosmos.CosmosClient;
+import com.azure.cosmos.models.CosmosPatchOperations;
 import com.azure.storage.blob.BlobContainerClient;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.NewCookie;

@@ -1,7 +1,5 @@
 package scc.data.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Arrays;
 
 
@@ -13,8 +11,9 @@ public class House {
     private String description;
     private String[] photoIds;
     private Period[] periods;
+    private long views;
 
-    public House(String id, String name, String ownerId, String location, String description, String[] photoIds, Period[] periods) {
+    public House(String id, String name, String ownerId, String location, String description, String[] photoIds, Period[] periods, long views) {
         super();
         this.id = id;
         this.name = name;
@@ -23,6 +22,7 @@ public class House {
         this.description = description;
         this.photoIds = photoIds;
         this.periods = periods;
+        this.views = views;
     }
 
     public House(){}
@@ -69,6 +69,13 @@ public class House {
     public void setPeriods(Period[] periods) {
         this.periods = periods;
     }
+    public Long getViews() {
+        return views;
+    }
+
+    public void setViews(long views) {
+        this.views = views;
+    }
 
     @Override
     public String toString() {
@@ -79,6 +86,7 @@ public class House {
                 ", description=" + description +
                 ", photos=" + Arrays.toString(photoIds) +
                 ", periods=" + Arrays.toString(periods) +
+                ", views=" + views +
                 ']';
     }
 

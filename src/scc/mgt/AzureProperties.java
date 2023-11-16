@@ -7,6 +7,8 @@ import java.util.Properties;
 public class AzureProperties
 {
 	public static final String BLOB_KEY = "BlobStoreConnection";
+	public static final String NUM_REPLICAS = "NUM_REPLICAS";
+	public static final String BLOB_REPLICA_KEY = "BlobStoreConnectionReplica";
 	public static final String COSMOSDB_KEY = "COSMOSDB_KEY";
 	public static final String COSMOSDB_URL = "COSMOSDB_URL";
 	public static final String COSMOSDB_DATABASE = "COSMOSDB_DATABASE";

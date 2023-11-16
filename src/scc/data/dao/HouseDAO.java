@@ -15,13 +15,14 @@ public class HouseDAO {
     private String description;
     private String[] photoIds;
     private Period[] periods;
+    private long views;
 
 
     public HouseDAO() {}
 
-    public HouseDAO(House h) {this(h.getId(), h.getName(), h.getOwnerId(), h.getLocation(), h.getDescription(), h.getPhotoIds(), h.getPeriods());}
+    public HouseDAO(House h) {this(h.getId(), h.getName(), h.getOwnerId(), h.getLocation(), h.getDescription(), h.getPhotoIds(), h.getPeriods(), 0L);}
 
-    public HouseDAO(String id, String name, String ownerId, String location, String description, String[] photoIds, Period[] periods) {
+    public HouseDAO(String id, String name, String ownerId, String location, String description, String[] photoIds, Period[] periods, long views) {
         super();
         this.id = id;
         this.name = name;
@@ -30,6 +31,7 @@ public class HouseDAO {
         this.description = description;
         this.photoIds = photoIds;
         this.periods = periods;
+        this.views = views;
     }
 
     public String get_rid() {
@@ -90,9 +92,17 @@ public class HouseDAO {
         this.periods = periods;
     }
 
+    public long getViews() {
+        return views;
+    }
+
+    public void setViews(long views) {
+        this.views = views;
+    }
+
     public House toHouse() {
         return new House(id, name, ownerId, location, description, photoIds == null? null : Arrays.copyOf(photoIds, photoIds.length),
-                periods == null? null : Arrays.copyOf(periods, periods.length));
+                periods == null? null : Arrays.copyOf(periods, periods.length), views);
     }
     @Override
     public String toString() {
@@ -104,6 +114,7 @@ public class HouseDAO {
                 ", description='" + description +
                 ", photos=" + Arrays.toString(photoIds) +
                 ", periods=" + Arrays.toString(periods) +
+                ", views=" + views +
                 ']';
     }
 

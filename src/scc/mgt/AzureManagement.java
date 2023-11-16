@@ -38,13 +38,13 @@ import com.azure.cosmos.models.UniqueKeyPolicy;
 
 public class AzureManagement {
 	// TODO: These variable allow you to control what is being created
-	static final boolean CREATE_STORAGE = false;
-	static final boolean CREATE_COSMOSDB = false;
-	static final boolean CREATE_REDIS = false;
+	static final boolean CREATE_STORAGE = true;
+	static final boolean CREATE_COSMOSDB = true;
+	static final boolean CREATE_REDIS = true;
 	static final boolean CREATE_SEARCH = false;
 
 	// TODO: change your suffix and other names if you want
-	static final String MY_SUFFIX = "57418"; // Add your suffix here
+	static final String MY_SUFFIX = "57449"; // Add your suffix here
 	
 	static final String AZURE_COSMOSDB_NAME = "scc24" + MY_SUFFIX;	// Cosmos DB account name
 	static final String AZURE_COSMOSDB_DATABASE = "scc24db" + MY_SUFFIX;	// Cosmos DB database name
@@ -53,7 +53,7 @@ public class AzureManagement {
 
 	static final String[] BLOB_CONTAINERS = { "users", "houses" };	// TODO: Containers to add to the blob storage
 
-	static final Region[] REGIONS = new Region[] { Region.EUROPE_WEST}; // Define the regions to deploy resources here
+	static final Region[] REGIONS = new Region[] { Region.EUROPE_WEST, Region.EUROPE_NORTH}; // Define the regions to deploy resources here
 	
 	// Name of resoruce group for each region
 	static final String[] AZURE_RG_REGIONS = Arrays.stream(REGIONS)
@@ -74,7 +74,7 @@ public class AzureManagement {
 			.toArray(String[]::new);
 		
 	// Name of Azure functions to be launched in each region
-	static final String[] AZURE_FUNCTIONS_NAME = Arrays.stream(REGIONS).map(reg -> "scc23fun" + reg.name() + MY_SUFFIX)
+	static final String[] AZURE_FUNCTIONS_NAME = Arrays.stream(REGIONS).map(reg -> "scc24fun" + reg.name() + MY_SUFFIX)
 			.toArray(String[]::new);
 
 	// Name of property file with keys and URLS to access resources
@@ -176,6 +176,69 @@ public class AzureManagement {
 		if (appName != null) {
 			appendInfo( cmd, appName, rgName, "BlobStoreConnection", key);
 		}
+		synchronized (AzureManagement.class) {
+			Files.write(Paths.get(settingsFilename), cmd.toString().getBytes(), StandardOpenOption.APPEND);
+		}
+	}
+
+	public synchronized static void dumpStorageReplicaKey(Map<String, String> props, int regionNum, StorageAccount account)
+			throws IOException {
+		List<StorageAccountKey> storageAccountKeys = account.getKeys();
+		storageAccountKeys = account.regenerateKey(storageAccountKeys.get(0).keyName());
+
+		StringBuffer keyB = new StringBuffer();
+		keyB.append("DefaultEndpointsProtocol=https;AccountName=");
+		keyB.append(account.name());
+		keyB.append(";AccountKey=");
+		keyB.append(storageAccountKeys.get(0).value());
+		keyB.append(";EndpointSuffix=core.windows.net");
+		String key = keyB.toString();
+
+		String propFilename = AZURE_PROPS_LOCATIONS[0];
+		String settingsFilename = AZURE_SETTINGS_LOCATIONS[0];
+		String functionName = AZURE_FUNCTIONS_NAME[0];
+		String rgName =  AZURE_RG_REGIONS[0];
+		String connectionProp = "BlobStoreConnectionReplica" + regionNum;
+
+		synchronized (props) {
+			props.put(connectionProp, key);
+		}
+
+		synchronized (AzureManagement.class) {
+			Files.write(Paths.get(propFilename), (connectionProp + "=" + key + "\n").getBytes(),
+					StandardOpenOption.APPEND);
+		}
+		StringBuffer cmd = new StringBuffer();
+		if (functionName != null) {
+			appendInfo( cmd, functionName, rgName, connectionProp, key);
+		}
+
+		synchronized (AzureManagement.class) {
+			Files.write(Paths.get(settingsFilename), cmd.toString().getBytes(), StandardOpenOption.APPEND);
+		}
+	}
+
+	public synchronized static void dumpStorageReplicasNum(Map<String, String> props, int numReplicas)
+			throws IOException {
+
+		String propFilename = AZURE_PROPS_LOCATIONS[0];
+		String settingsFilename = AZURE_SETTINGS_LOCATIONS[0];
+		String functionName = AZURE_FUNCTIONS_NAME[0];
+		String rgName =  AZURE_RG_REGIONS[0];
+
+		synchronized (props) {
+			props.put("NUM_REPLICAS", String.valueOf(numReplicas));
+		}
+
+		synchronized (AzureManagement.class) {
+			Files.write(Paths.get(propFilename), ("NUM_REPLICAS=" + numReplicas + "\n").getBytes(),
+					StandardOpenOption.APPEND);
+		}
+		StringBuffer cmd = new StringBuffer();
+		if (functionName != null) {
+			appendInfo( cmd, functionName, rgName, "NUM_REPLICAS", String.valueOf(numReplicas));
+		}
+
 		synchronized (AzureManagement.class) {
 			Files.write(Paths.get(settingsFilename), cmd.toString().getBytes(), StandardOpenOption.APPEND);
 		}
@@ -448,14 +511,25 @@ public class AzureManagement {
 					Thread th = new Thread(() -> {
 						try {
 							final AzureResourceManager azure0 = createManagementClient();
-							for (int i = 0; i < REGIONS.length; i++) {
-								StorageAccount accountStorage = createStorageAccount(azure0, AZURE_RG_REGIONS[i],
+							StorageAccount accountStorage = createStorageAccount(azure0, AZURE_RG_REGIONS[0],
+									AZURE_STORAGE_NAME[0], REGIONS[0]);
+							dumpStorageKey(props.get(REGIONS[0].name()), AZURE_PROPS_LOCATIONS[0],
+									AZURE_SETTINGS_LOCATIONS[0], AZURE_APP_NAME[0], AZURE_FUNCTIONS_NAME[0],
+									AZURE_RG_REGIONS[0], accountStorage);
+							for (String cont : BLOB_CONTAINERS)
+								createBlobContainer(azure0, AZURE_RG_REGIONS[0], AZURE_STORAGE_NAME[0], cont);
+							dumpStorageReplicasNum(props.get(REGIONS[0].name()), REGIONS.length-1);
+
+							for (int i = 1; i < REGIONS.length; i++) {
+								accountStorage = createStorageAccount(azure0, AZURE_RG_REGIONS[i],
 										AZURE_STORAGE_NAME[i], REGIONS[i]);
 								dumpStorageKey(props.get(REGIONS[i].name()), AZURE_PROPS_LOCATIONS[i],
 										AZURE_SETTINGS_LOCATIONS[i], AZURE_APP_NAME[i], AZURE_FUNCTIONS_NAME[i],
 										AZURE_RG_REGIONS[i], accountStorage);
 								for (String cont : BLOB_CONTAINERS)
 									createBlobContainer(azure0, AZURE_RG_REGIONS[i], AZURE_STORAGE_NAME[i], cont);
+
+								dumpStorageReplicaKey(props.get(REGIONS[0].name()), i, accountStorage);
 							}
 							System.err.println("Azure Blobs Storage resources created with success");
 
