@@ -14,7 +14,7 @@ public class HousesResource extends Resource implements RestHouses {
     }
 
     @Override
-    public String createHouse(Cookie session, House house) {
+    public House createHouse(Cookie session, House house) {
         return super.getResult(() -> db.createHouse(session, house));
     }
 

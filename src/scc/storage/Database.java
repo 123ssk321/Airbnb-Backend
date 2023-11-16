@@ -36,7 +36,7 @@ public interface Database {
 
     /*--------------------------------------------------- HOUSES -----------------------------------------------------*/
 
-    Result<String> createHouse(Cookie session, House house);
+    Result<House> createHouse(Cookie session, House house);
 
     Result<House> getHouse(String houseId);
 

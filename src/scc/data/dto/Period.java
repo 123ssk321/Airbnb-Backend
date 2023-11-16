@@ -1,5 +1,7 @@
 package scc.data.dto;
 
+import java.util.Objects;
+
 public class Period {
     private String startDate; // yyyy-mm-dd
     private String endDate; // yyyy-mm-dd
@@ -52,6 +54,23 @@ public class Period {
 
     public void setAvailable(boolean available) {
         this.available = available;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Period period = (Period) o;
+
+        if (available != period.available) return false;
+        if (!startDate.equals(period.startDate)) return false;
+        return endDate.equals(period.endDate);
+    }
+
+    @Override
+    public int hashCode() {
+        return 0;
     }
 
     @Override

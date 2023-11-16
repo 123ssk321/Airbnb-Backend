@@ -28,7 +28,7 @@ public interface RestHouses {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    String createHouse(@CookieParam("scc:session") Cookie session, House house);
+    House createHouse(@CookieParam("scc:session") Cookie session, House house);
 
     /**
      * Returns the house identified by houseId.

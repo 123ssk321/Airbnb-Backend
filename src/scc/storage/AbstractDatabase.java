@@ -152,8 +152,11 @@ public abstract class AbstractDatabase implements Database {
     }
 
     public Result<List<HouseOwner>> listUserHouses(Cookie session, String ownerId, int start, int length) {
-        if(ownerId == null || !this.hasUser(ownerId)){
+        if(ownerId == null ){
             return Result.error(Response.Status.BAD_REQUEST);
+        }
+        if(!this.hasUser(ownerId)){
+            return Result.error(Response.Status.NOT_FOUND);
         }
 
         var authRes = checkCookie(session, ownerId);
@@ -164,8 +167,11 @@ public abstract class AbstractDatabase implements Database {
     }
 
     public Result<List<Rental>> listUserRentals(Cookie session, String userId, int start, int length) {
-        if(userId == null || !this.hasUser(userId)){
+        if( userId == null ){
             return Result.error(Response.Status.BAD_REQUEST);
+        }
+        if(!this.hasUser(userId)){
+            return Result.error(Response.Status.NOT_FOUND);
         }
 
         var authRes = checkCookie(session, userId);
@@ -203,7 +209,7 @@ public abstract class AbstractDatabase implements Database {
 
     /*--------------------------------------------------- HOUSES -----------------------------------------------------*/
 
-    public Result<String> createHouse(Cookie session, House house) {
+    public Result<House> createHouse(Cookie session, House house) {
         if(house == null || house.getName() == null || house.getLocation() == null || house.getDescription() == null
                 || house.getPhotoIds() == null || house.getPhotoIds().length == 0
                 || house.getPeriods() == null || house.getPeriods().length == 0) {
@@ -215,7 +221,7 @@ public abstract class AbstractDatabase implements Database {
         }
         var owner = this.getUser(house.getOwnerId());
         if (owner == null)
-            return Result.error(Response.Status.BAD_REQUEST);
+            return Result.error(Response.Status.NOT_FOUND);
 
         var authRes = checkCookie(session, owner.getId());
         if(!authRes.isOK())
@@ -223,13 +229,14 @@ public abstract class AbstractDatabase implements Database {
 
         var houseId = UUID.randomUUID().toString();
 
+
         var ownerHouseIds = new ArrayList<>(Arrays.asList(owner.getHouseIds()));
         ownerHouseIds.add(houseId);
 
         users.updateUser(owner.getId(), CosmosPatchOperations.create().set("/houseIds", ownerHouseIds));
 
         house.setId(houseId);
-        return Result.ok(houses.putHouse(new HouseDAO(house)).getItem().getId());
+        return Result.ok(houses.putHouse(new HouseDAO(house)).getItem().toHouse());
     }
 
     public Result<House> getHouse(String houseId){
@@ -333,21 +340,40 @@ public abstract class AbstractDatabase implements Database {
     /*-------------------------------------------------- RENTALS -----------------------------------------------------*/
 
     public Result<String> createRental(Cookie session, String houseId, Rental rental) {
-        if(houseId == null || rental.getId() == null || rental.getTenantId() == null || rental.getLandlordId() == null
-                || rental.getPeriod() == null
-                || !this.hasUser(rental.getTenantId()) || !this.hasUser(rental.getLandlordId())){
+        if(houseId == null || rental.getTenantId() == null || rental.getLandlordId() == null
+                || rental.getPeriod() == null) {
             return Result.error(Response.Status.BAD_REQUEST);
         }
         var house = this.getHouseDAO(houseId);
-        if (house == null)
+        var tenant = this.getUser(rental.getTenantId());
+        if (house == null || tenant == null || !this.hasUser(rental.getLandlordId()))
             return Result.error(Response.Status.NOT_FOUND);
         if(!house.getOwnerId().equals(rental.getLandlordId()))
-            return Result.error(Response.Status.BAD_REQUEST);
+            return Result.error(Response.Status.FORBIDDEN);
 
-        var authRes = checkCookie(session, rental.getTenantId());
+        var authRes = checkCookie(session, tenant.getId());
         if(!authRes.isOK())
             return Result.error(authRes.error());
+
+        var housePeriods = Arrays.asList(house.getPeriods());
+        var periodIdx = housePeriods.indexOf(rental.getPeriod());
+        if(periodIdx == -1)
+            return Result.error(Response.Status.NOT_FOUND);
+
         rental.setHouseId(houseId);
+        rental.setId(UUID.randomUUID().toString());
+
+        var period = housePeriods.get(periodIdx);
+        period.setAvailable(false);
+        rental.setPeriod(period);
+
+        housePeriods.set(periodIdx, period);
+        houses.updateHouse(houseId, CosmosPatchOperations.create().set("/periods", housePeriods));
+
+        var tenantRentalIds = new ArrayList<>(Arrays.asList(tenant.getRentalIds()));
+        tenantRentalIds.add(rental.getId());
+        users.updateUser(tenant.getId(), CosmosPatchOperations.create().set("/rentalIds", tenantRentalIds));
+        
         return Result.ok(rentals.putRental(new RentalDAO(rental)).getItem().getId());
     }
 
@@ -359,7 +385,7 @@ public abstract class AbstractDatabase implements Database {
 
         var rental = rentals.getRental(rentalId);
         if (rental == null)
-            return Result.error(Response.Status.BAD_REQUEST);
+            return Result.error(Response.Status.NOT_FOUND);
 
         var authRes = checkCookie(session, rental.getLandlordId());
         if(!authRes.isOK())
@@ -370,9 +396,14 @@ public abstract class AbstractDatabase implements Database {
         var periodToUpdate = rental.getPeriod();
 
         if(tenantIdToUpdate != null){
-            if(!this.hasUser(tenantIdToUpdate))
-                return Result.error(Response.Status.BAD_REQUEST);
+            var tenant = this.getUser(tenantIdToUpdate);
+            if(tenant == null)
+                return Result.error(Response.Status.NOT_FOUND);
             updateOps.replace("/tenantId", tenantIdToUpdate);
+
+            var tenantRentalIds = new ArrayList<>(Arrays.asList(tenant.getRentalIds()));
+            tenantRentalIds.add(rental.getId());
+            users.updateUser(tenant.getId(), CosmosPatchOperations.create().set("/rentalIds", tenantRentalIds));
         }
         if(periodToUpdate != null)
             updateOps.replace("/period", periodToUpdate);
@@ -386,7 +417,7 @@ public abstract class AbstractDatabase implements Database {
 
         var house = this.getHouseDAO(houseId);
         if(house == null){
-            return Result.error(Response.Status.BAD_REQUEST);
+            return Result.error(Response.Status.NOT_FOUND);
         }
 
         var owner = this.getUser(house.getOwnerId());
@@ -416,7 +447,7 @@ public abstract class AbstractDatabase implements Database {
         }
 
         if (!this.hasUser(question.getUserId()))
-            return Result.error(Response.Status.BAD_REQUEST);
+            return Result.error(Response.Status.NOT_FOUND);
 
         var authRes = checkCookie(session, question.getUserId());
         if(!authRes.isOK())

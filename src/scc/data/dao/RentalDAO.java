@@ -76,7 +76,8 @@ public class RentalDAO {
     public String toString() {
         return "Rental [_rid=" + _rid +
                 ", _ts=" + _ts +
-                "house=" + houseId +
+                ", id=" + id +
+                ", house=" + houseId +
                 ", tenant=" + tenantId +
                 ", landlord=" + landlordId +
                 ", period=" + period +
