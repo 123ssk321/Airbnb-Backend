@@ -14,7 +14,7 @@ $ mvn clean compile package azure-webapp:deploy
 
 ## Deploy Azure Functions
 
-Unzip Azure-Functions project and run:
+Unzip Azure-Functions project in another folder and run:
 ```console
 $ cd Azure-Functions
 $ mvn clean compile package azure-functions:deploy
