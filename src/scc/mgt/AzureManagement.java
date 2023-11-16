@@ -418,6 +418,8 @@ public class AzureManagement {
 
 		for (SearchService srv : azure.searchServices().list()) {
 			if (!srv.name().equalsIgnoreCase(AZURE_SEARCH_SERVICE)){
+				dumpDisableResourceInfo(settingsFilename, appName, functionName,
+						rgName, "USE_COG_SEARCH");
 				continue;
 			}
 
