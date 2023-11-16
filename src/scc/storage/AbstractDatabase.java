@@ -242,6 +242,10 @@ public abstract class AbstractDatabase implements Database {
             return Result.error(Response.Status.NOT_FOUND);
         }
 
+        var updateViews = new Thread(() -> houses.updateHouse(houseId, CosmosPatchOperations.create().increment("/views", 1)));
+        updateViews.start();
+
+        house.setViews(house.getViews()+1);
         return Result.ok(house.toHouse());
     }
 
