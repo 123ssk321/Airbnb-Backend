@@ -81,9 +81,9 @@ scenarios:
     flow:
       - function: "selectUserSkewed"
       - post:                          # First: login as a user
-         url: "/user/auth"
-         cookie: "{{ sessionId }}"
-         name: "POST:/user/auth"
+         url: "/auth"
+         #cookie: "{{ sessionId }}"
+         #name: "POST:/user/auth"
          headers:
            Content-Type: application/json
          json:
@@ -93,7 +93,7 @@ scenarios:
               header: "set-cookie"
               as: "sessionId"
       - get:                          # Get rentals for the user (assuming rentals + houses + discount initial page)
-          url: "/users/{{ id }}/rentals"
+          url: "/users/{{ id }}/rentals?st=0&len=20"
           name: "GET:/user/*/rentals"
           headers:
             Accept: application/json
@@ -101,7 +101,7 @@ scenarios:
             json: "$"
             as: "rentalsLst"
       - get:                          # Get houses of the user 
-          url: "/users/{{ id }}/house"
+          url: "/users/{{ id }}/house?st=0&len=20"
           cookie: "{{ sessionId }}"
           headers:
             Accept: application/json
@@ -109,14 +109,14 @@ scenarios:
             json: "$"
             as: "housesLst"
       - get:                          # Get generic available houses available for a given start-date in a location
-          url: "/house?location=Lisbon&starDate=01-01-2023"
+          url: "/house?location=Lisbon&starDate=01-01-2023&st=0&len=20"
           headers:
             Accept: application/json
           capture: 
             json: "$"
             as: "housesGenericLst"  
       - get:                          # Get  list of discounted rentals in the near future (2 weeks)
-          url: "/house/discount"
+          url: "/house/discount?st=0&len=20"
           headers:
             Accept: application/json
           capture: 
@@ -124,7 +124,7 @@ scenarios:
             as: "rentalsDiscountLst"  
       - loop:                                   # Check the rentals of the houses 
         - get:                          
-            url: "/house/{{ $loopElement.id }}/rental"
+            url: "/house/{{ $loopElement.id }}/rental?st=0&len=20"
             headers:
               Accept: application/json
             capture: 
@@ -132,7 +132,7 @@ scenarios:
               as: "houseRentalsLst"
 
         - get:                                   # Get unanswered questions
-            url: "/house/{{ $loopElement.id }}/question"
+            url: "/house/{{ $loopElement.id }}/question?st=0&len=20"
             headers:
               Accept: application/json
             capture: 

@@ -1,18 +1,18 @@
 config:
-  target: 'https://scc24appwesteurope57449.azurewebsites.net/rest'
+  target: 'https://scc24appwesteurope57418.azurewebsites.net/rest'
   plugins:
     metrics-by-endpoint:
       useOnlyRequestNames: true
   processor: "./test-utils.js"
   variables:
-     metricsProcessEndpoint : "myProcessEndpoint"  # function used to aggregate endpoints for statistics
+    metricsProcessEndpoint : "myProcessEndpoint"  # function used to aggregate endpoints for statistics
   phases:
-  - name: "Create users"    # Create users
-    duration: 1
-    arrivalCount: 1
+    - name: "Create users, houses, rentals, questions and replies"    # Create users
+      duration: 1
+      arrivalCount: 1
 
 scenarios:
-  - name: 'Create users'
+  - name: 'Create users, houses, rentals, questions and replies'
     weight: 1
     flow:
       # - loop:         # let's create 250 users - loop ... count
@@ -23,7 +23,7 @@ scenarios:
       #         Accept: application/json
       #       beforeRequest: "uploadImageBody"
       #       afterResponse: "processUploadReply"
-      #       capture: 
+      #       capture:
       #         regexp: "(.+)"
       #         as: "imageId"              # capture the reply as image id to be used in user creation
       #   - function: "genNewUser"         # Generate the needed information for the user
@@ -41,72 +41,177 @@ scenarios:
       #       afterResponse: "genNewUserReply"    # capture result and store in file
       #   count: 1
 
-      - loop:                            # let's create 50 users with houses - loop ... count
-        - post:                          # First: post image for the user
-            url: "/media/users"
-            headers:
-              Content-Type: application/octet-stream
-              Accept: application/json
-            beforeRequest: "uploadImageBody"
-            afterResponse: "processUploadReply"
-            capture: 
-              regexp: "(.+)"
-              as: "imageId"              # capture the reply as image id to be used in user creation
-        - function: "genNewUser"         # Generate the needed information for the user
-        - post:
-            url: "/users"
-            headers:
-              Content-Type: application/json
-              Accept: application/json
-            json:
-              id: "{{ id }}"
-              name: "{{ name }}"
-              pwd: "{{ pwd }}"
-              photoId: "{{ imageId }}"
-              houseIds: []
-              rentalIds: []
-            afterResponse: "genNewUserReply"    # capture result and store in file
-        - post:
-            url: "/auth"
-            headers:
-              Content-Type: application/json
-            json:
-              userId: "{{ id }}"
-              pwd: "{{ pwd }}"
-            capture:
-              header: "set-cookie"
-              as: "sessionId"
-        - loop:                            # let's create (2) 50 houses - loop ... count
-          - post:                          # First: post image for the house
-              url: "/media/houses"
+      - loop: # let's create 50 users with houses - loop ... count
+          - post: # First: post image for the user
+              url: "/media/users"
               headers:
                 Content-Type: application/octet-stream
                 Accept: application/json
               beforeRequest: "uploadImageBody"
               afterResponse: "processUploadReply"
-              capture: 
+              capture:
                 regexp: "(.+)"
-                as: "imageId"              # capture the reply as image id to be used in house creation
-          - function: "genNewHouse"         # Generate the needed information for the house
+                as: "imageId"              # capture the reply as image id to be used in user creation
+          - function: "genNewUser"         # Generate the needed information for the user
           - post:
-              url: "/house"
+              url: "/users"
+              headers:
+                Content-Type: application/json
+                Accept: application/json
+              json:
+                id: "{{ id }}"
+                name: "{{ name }}"
+                pwd: "{{ pwd }}"
+                photoId: "{{ imageId }}"
+                houseIds: [ ]
+                rentalIds: [ ]
+              afterResponse: "genNewUserReply"    # capture result and store in file
+          - post:
+              url: "/auth"
+              headers:
+                Content-Type: application/json
+              json:
+                userId: "{{ id }}"
+                pwd: "{{ pwd }}"
+              capture:
+                header: "set-cookie"
+                as: "sessionId"
+          - loop: # let's create (2) 50 houses - loop ... count
+              - post: # First: post image for the house
+                  url: "/media/houses"
+                  headers:
+                    Content-Type: application/octet-stream
+                    Accept: application/json
+                  beforeRequest: "uploadImageBody"
+                  afterResponse: "processUploadReply"
+                  capture:
+                    regexp: "(.+)"
+                    as: "imageId"              # capture the reply as image id to be used in house creation
+              - function: "genNewHouse"         # Generate the needed information for the house
+              - post:
+                  url: "/house"
+                  cookie: "{{ sessionId }}"
+                  headers:
+                    Content-Type: application/json
+                    Accept: application/json
+                  json:
+                    name: "{{ name }}"
+                    ownerId: "{{ id }}"
+                    location: "{{ location }}"
+                    description: "{{ description }}"
+                    photoIds: [ "{{ imageId }}" ]
+                    periods: "{{periods}}"
+
+                  afterResponse: "genNewHouseReply"
+            #  whileTrue: "random90"
+            count: 2
+        count: 10
+
+      - loop:                                           # let's create (2) 50 rentals - loop ... count
+          - function: "selectUserSkewed"
+          - post:
+              url: "/auth"
+              headers:
+                Content-Type: application/json
+              json:
+                userId: "{{ id }}"
+                pwd: "{{ pwd }}"
+              capture:
+                header: "set-cookie"
+                as: "sessionId"
+          - function: "genNewRental"
+          - post:
+              url: "/house/{{ houseId }}/rental"
               cookie: "{{ sessionId }}"
               headers:
                 Content-Type: application/json
                 Accept: application/json
               json:
-                name: "{{ name }}"
-                ownerId: "{{ id }}"
-                location: "{{ location }}"
-                description: "{{ description }}"
-                photoIds: ["{{ imageId }}"]
-                periods:  "{{periods}}"
+                houseId: "{{ houseId }}"
+                tenantId: "{{ id }}"
+                landlordId: "{{ landlordId }}"
+                period: "{{ period }}"
+              ifTrue: "period"
+        count: 2
 
-              afterResponse: "genNewHouseReply"  
-        #  whileTrue: "random90"
-          count: 2
-        count: 5
+      - loop:                                         # let's create (2) 50 questions without answer - loop ... count
+          - function: "selectUserSkewed"
+          - post:
+              url: "/auth"
+              headers:
+                Content-Type: application/json
+              json:
+                userId: "{{ id }}"
+                pwd: "{{ pwd }}"
+              capture:
+                header: "set-cookie"
+                as: "sessionId"
+          - function: "selectHousesSkewed"
+          - function: "genNewQuestion"
+          - post:
+              url: "/house/{{ houseId }}/question"
+              cookie: "{{ sessionId }}"
+              headers:
+                Content-Type: application/json
+                Accept: application/json
+              json:
+                userId: "{{ id }}"
+                message: "{{ message }}"
+              ifTrue: "houseId"
+        count: 2
 
-      
+      - loop:                                           # let's create (2) 50 questions with answer - loop ... count
+          - function: "selectUserSkewed"
+          - post:
+              url: "/auth"
+              headers:
+                Content-Type: application/json
+              json:
+                userId: "{{ id }}"
+                pwd: "{{ pwd }}"
+              capture:
+                header: "set-cookie"
+                as: "sessionId"
+          - function: "selectHousesSkewed"
+          - function: "genNewQuestion"
+          - post:
+              url: "/house/{{ houseId }}/question"
+              cookie: "{{ sessionId }}"
+              headers:
+                Content-Type: application/json
+                Accept: application/json
+              json:
+                userId: "{{ id }}"
+                message: "{{ message }}"
+              capture:
+                regexp: "(.+)"
+                as: "questionId"
+              ifTrue: "houseId"
+          - function: "genReply"
+          - post:
+              url: "/auth"
+              headers:
+                Content-Type: application/json
+              json:
+                userId: "{{ ownerId }}"
+                pwd: "{{ pwd }}"
+              capture:
+                header: "set-cookie"
+                as: "sessionId"
+              ifTrue: "houseId"
+          - put:
+              url: "/house/{{ houseId }}/question/{{questionId}}"
+              cookie: "{{ sessionId }}"
+              headers:
+                Content-Type: application/json
+                Accept: application/json
+              json:
+                userId: "{{ ownerId }}"
+                message: "{{ reply }}"
+              ifTrue: "houseId"
+        count: 1
+
+
+
 
  

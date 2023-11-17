@@ -14,9 +14,12 @@ module.exports = {
   toJSON,
   genNewHouse,
   genNewHouseReply,
+  genNewRental,
   selectUserSkewed,
   decideNextAction,
-  selectHouse,
+  selectHousesSkewed,
+  genNewQuestion,
+  genReply,
   selectPeriod,
   selectQuestion,
   random20,
@@ -28,6 +31,7 @@ module.exports = {
 
 const { faker } = require('@faker-js/faker');
 const fs = require('fs')
+//const {c} = require("@faker-js/faker/dist/esm/chunk-5DGXOR5D.mjs");
 
 var imagesIds = []
 var images = []
@@ -85,7 +89,11 @@ function loadData() {
 	if( fs.existsSync('users.data')) {
 		str = fs.readFileSync('users.data','utf8')
 		users = JSON.parse(str)
-	} 
+	}
+	if( fs.existsSync('houses.data')) {
+		str = fs.readFileSync('houses.data','utf8')
+		houses = JSON.parse(str)
+	}
 }
 
 loadData();
@@ -142,15 +150,19 @@ function genNewUser(context, events, done) {
 }
 
 function genUpdateUsername(context, events, done) {
-	let user = users.sampleSkewed()
-	console.log(user)
-	context.vars.id = user.id
+	if( users.length > 0) {
+		let user = users.sampleSkewed()
+		context.vars.id = user.id
 
+		const first = `${faker.person.firstName()}`
+		const last = `${faker.person.lastName()}`
+		context.vars.name = first + " " + last
 
-	const first = `${faker.person.firstName()}`
-	const last = `${faker.person.lastName()}`
-	console.log(first + " " + last)
-	context.vars.name = first + " " + last
+	} else {
+		delete context.vars.id
+		delete context.vars.name
+	}
+	return done()
 }
 
 
@@ -226,27 +238,80 @@ function genNewHouse(context, events, done) {
  */
 function genNewHouseReply(requestParams, response, context, ee, next) {
 	if( response.statusCode >= 200 && response.statusCode < 300 && response.body.length > 0)  {
-		// let u = JSON.parse( response.body)
-		// users.push(u)
-		// fs.writeFileSync('users.data', JSON.stringify(users));
-		houses.push(response.body)
+		let h = JSON.parse( response.body)
+		houses.push(h)
 		fs.writeFileSync('houses.data', JSON.stringify(houses));
+		//houses.push(response.body)
+		//fs.writeFileSync('houses.data', JSON.stringify(houses));
 	}
     return next()
 }
 
+function genNewRental(context, events, done) {
+	if(  houses.length > 0) {
+		let house = houses.sampleSkewed()
+		let periods = house.periods;
 
-/**
- * Select an house to download.
- */
-// function selectHouse(context, events, done) {
-// 	if( houses.length > 0) {
-// 		context.vars.houseId = houses.sample()
-// 	} else {
-// 		delete context.vars.houseId
-// 	}
-// 	return done()
-// }
+		let found = false
+		let period
+
+		for (let i = 0; i < periods.length; i++) {
+			period = periods[i]
+
+			if(period.available) {
+				context.vars.period = period
+				found = true
+
+				context.vars.period = period
+				context.vars.landlordId = house.ownerId
+				context.vars.houseId = house.id
+
+				break;
+			}
+		}
+
+		if(!found){
+			delete context.vars.period
+			delete context.vars.landlordId
+			delete context.vars.houseId
+		}
+	} else{
+		delete context.vars.period
+		delete context.vars.landlordId
+		delete context.vars.houseId
+	}
+
+	return done()
+}
+
+function genNewQuestion(context, events, done){
+	context.vars.message = `${faker.lorem.paragraph()}`
+
+	return done()
+}
+
+function genReply(context, events, done){
+	context.vars.message = `${faker.lorem.paragraph()}`
+	context.vars.reply = `${faker.lorem.paragraph()}`
+
+	context.vars.pwd =
+		users.find(x => x.id === context.vars.ownerId).pwd;
+
+	return done()
+}
+
+
+function selectHousesSkewed(context, events, done) {
+	if( houses.length > 0) {
+		let house = houses.sampleSkewed()
+		context.vars.houseId = house.id
+		context.vars.ownerId = house.ownerId
+ 	} else {
+ 		delete context.vars.houseId
+		delete context.vars.ownerId
+	}
+	return done()
+ }
 
 
 /**
