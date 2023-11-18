@@ -190,7 +190,7 @@ scenarios:
                 json: "$"
                 as: "housesLst"
               ifTrue: "nextAction == 1"
-          - function: "selectHouse"
+          - function: "selectHousesSkewed"
           ################################# Browse next page
           - get:
               url: "/house?st=0&len=20"
