@@ -1,5 +1,5 @@
 config:
-  target: 'https://scc24appwesteurope57418.azurewebsites.net/rest'
+  target: 'https://scc24appwesteurope57449.azurewebsites.net/rest'
   plugins:
     metrics-by-endpoint:
       useOnlyRequestNames: true
@@ -20,6 +20,7 @@ scenarios:
       - function: "selectUserSkewed"
       - post:                          # First: login as a user
           url: "/auth"
+          name: "POST:/auth"
           headers:
             Content-Type: application/json
           json:
@@ -31,6 +32,7 @@ scenarios:
       - get:                          # Get rentals for the user (assuming rentals + houses + discount initial page)
           url: "/users/{{ id }}/rental?st=0&len=20"
           #cookie: "{{ sessionId }}"
+          name: "GET:/user/*/rentals"
           headers:
             Accept: application/json
           capture:
@@ -39,6 +41,7 @@ scenarios:
       - get:                          # Get houses for the user (assuming rentals + houses + discount initial page)
           url: "/users/{{ id }}/house?st=0&len=20"
           #cookie: "{{ sessionId }}"
+          name: "GET:/user/*/houses"
           headers:
             Accept: application/json
           capture:
@@ -46,6 +49,7 @@ scenarios:
             as: "housesLst"
       - get:                          # Get generic discounted houses (assuming rentals + houses + discount initial page)
           url: "/house/discount?st=0&len=20"
+          name: "GET:/house/discount"
           headers:
             Accept: application/json
           capture:
@@ -54,6 +58,7 @@ scenarios:
       - loop:                                   # Check houses for their rentals
           - get:
               url: "/house/{{ $loopElement.houseId }}?st=0&len=20"
+              name: "GET:/house/*"
               headers:
                 Accept: application/json
         over: "rentalsLst"
@@ -64,7 +69,7 @@ scenarios:
       - function: "selectUserSkewed"
       - post:                          # First: login as a user
           url: "/auth"
-          #name: "POST:/auth"
+          name: "POST:/auth"
           headers:
             Content-Type: application/json
           json:
@@ -76,7 +81,7 @@ scenarios:
       - get:                          # Get rentals for the user (assuming rentals + houses + discount initial page)
           url: "/users/{{ id }}/rental?st=0&len=20"
           #cookie: "{{ sessionId }}"
-          #name: "GET:/user/*/rentals"
+          name: "GET:/user/*/rentals"
           headers:
             Accept: application/json
           capture:
@@ -85,7 +90,7 @@ scenarios:
       - get:                          # Get houses for the user (assuming rentals + houses + discount initial page)
           url: "/users/{{ id }}/house?st=0&len=20"
           #cookie: "{{ sessionId }}"
-          #name: "GET:/user/*/houses"
+          name: "GET:/user/*/houses"
           headers:
             Accept: application/json
           capture:
@@ -93,7 +98,7 @@ scenarios:
             as: "housesLst"
       - get:                          # Get generic discounted houses (assuming rentals + houses + discount initial page)
           url: "/house/discount"
-          #name: "GET:/house/discount"
+          name: "GET:/house/discount"
           headers:
             Accept: application/json
           capture:
@@ -103,7 +108,7 @@ scenarios:
           - get:                                   # Check houses for their rentals
               url: "/house/{{ $loopElement.id }}/rental?st=0&len=20"
               #cookie: "{{ sessionId }}"
-              #name: "GET:/house/*/rental"
+              name: "GET:/house/*/rental"
               headers:
                 Accept: application/json
               capture:
@@ -111,7 +116,7 @@ scenarios:
                 as: "houseRentalsLst"
           - get:                                   # Get unanswered questions
               url: "/house/{{ $loopElement.id }}/question?answered=false?st=0&len=20"
-              #name: "GET:/house/*/question"
+              name: "GET:/house/*/question"
               headers:
                 Accept: application/json
               capture:
@@ -122,7 +127,7 @@ scenarios:
           - put:                                   # Answer one question
               url: "/house/{{ houseId }}/question/{{ questionId }}"
               #cookie: "{{ sessionId }}"
-              #name: "PUT:/house/*/question/*"
+              name: "PUT:/house/*/question/*"
               headers:
                 Accept: application/json
                 Content-Type: application/json
@@ -137,7 +142,7 @@ scenarios:
       - function: "selectUserSkewed"
       - post:                          # First: login as a user
           url: "/auth"
-          #name: "POST:/auth"
+          name: "POST:/auth"
           headers:
             Content-Type: application/json
           json:
@@ -150,7 +155,7 @@ scenarios:
           - get:                          # Get rentals for the user (assuming rentals + houses + discount initial page)
               url: "/users/{{ id }}/rental?st=0&len=20"
               #cookie: "{{ sessionId }}"
-              #name: "GET:/user/*/rentals"
+              name: "GET:/user/*/rentals"
               headers:
                 Accept: application/json
               capture:
@@ -159,7 +164,7 @@ scenarios:
           - get:                          # Get houses for the user (assuming rentals + houses + discount initial page)
               url: "/users/{{ id }}/house?st=0&len=20"
               #cookie: "{{ sessionId }}"
-              #name: "GET:/user/*/houses"
+              name: "GET:/user/*/houses"
               headers:
                 Accept: application/json
               capture:
@@ -168,7 +173,7 @@ scenarios:
           - get:                          # Get generic discounted houses (assuming rentals + houses + discount initial page)
               url: "/house/discount?st=0&len=20"
               #cookie: "{{ sessionId }}"
-              #name: "GET:/house/discount"
+              name: "GET:/house/discount"
               headers:
                 Accept: application/json
               capture:
@@ -178,7 +183,7 @@ scenarios:
           ################################# Search location
           - get:
               url: "/house?location={{ location }}&startDate={{ initDate }}&endDate={{ endDate }}&st=0&len=20"
-              #name: "GET:/house/*"
+              name: "GET:/house/*"
               headers:
                 Accept: application/json
               capture:
@@ -202,7 +207,7 @@ scenarios:
           ################################# Check questions
           - get:
               url: "/house/{{ houseId }}/question?st=0&len=20"
-              #name: "GET:/house/*/question"
+              name: "GET:/house/*/question"
               headers:
                 Accept: application/json
               ifTrue: "houseId and afterNextAction == 1"
@@ -210,7 +215,7 @@ scenarios:
           - post:
               url: "/house/{{ houseId }}/question"
               #cookie: "{{ sessionId }}"
-              #name: "POST:/house/*/question"
+              name: "POST:/house/*/question"
               headers:
                 Accept: application/json
                 Content-Type: application/json
@@ -221,7 +226,7 @@ scenarios:
           ################################# Reserve house
           - get:                                           # get free slots for a randomly selected available house
               url: "/house"
-              #name: "GET:/house/*/rental"
+              name: "GET:/house/*/rental"
               headers:
                 Accept: application/json
               capture:
@@ -231,7 +236,7 @@ scenarios:
           - function: "selectPeriod"
           - post:                                          # reserve selected house in selected slot
               url: "/house/{{ houseId }}/rental"
-              #name: "POST:/house/*/rental/*/renter"
+              name: "POST:/house/*/rental/*/renter"
               headers:
                 Accept: application/json
               json: "{{ rental }}"
