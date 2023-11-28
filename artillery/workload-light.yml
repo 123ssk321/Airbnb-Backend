@@ -183,7 +183,7 @@ scenarios:
           ################################# Search location
           - get:
               url: "/house?location={{ location }}&startDate={{ initDate }}&endDate={{ endDate }}&st=0&len=20"
-              name: "GET:/house/*"
+              name: "GET:/house/search"
               headers:
                 Accept: application/json
               capture:
@@ -224,21 +224,21 @@ scenarios:
                 message: "{{ text }}"
               ifTrue: "houseId and afterNextAction == 2"
           ################################# Reserve house
-          - get:                                           # get free slots for a randomly selected available house
-              url: "/house"
-              name: "GET:/house/*/rental"
+          - get:                                           # get available houses and a free slot from one of them
+              url: "/house?location=Lisbon&st=0&len=20"
+              name: "GET:/house/search"
               headers:
                 Accept: application/json
               capture:
                 json: "$"
                 as: "rentalLst"
-              ifTrue: "houseId and afterNextAction == 3"
+              ifTrue: "afterNextAction == 3"
           - function: "selectPeriod"
           - post:                                          # reserve selected house in selected slot
               url: "/house/{{ houseId }}/rental"
-              name: "POST:/house/*/rental/*/renter"
+              name: "POST:/house/*/rental"
               headers:
                 Accept: application/json
               json: "{{ rental }}"
-              ifTrue: "rentalId and afterNextAction == 3"
+              ifTrue: "rental and afterNextAction == 3"
         whileTrue: "random80"
