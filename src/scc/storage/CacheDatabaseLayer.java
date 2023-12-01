@@ -90,8 +90,14 @@ public class CacheDatabaseLayer extends AbstractDatabase implements Database {
     @Override
     public Result<User> deleteUser(Cookie session, String userId) {
         var result = super.deleteUser(session, userId);
-        if(result.isOK())
+        if(result.isOK()){
+            for(String houseId : result.value().getHouseIds()){
+                var house = cache.get(getCacheKey(HOUSE_REDIS_KEY, houseId), HouseDAO.class);
+                if(house != null)
+                    cache.set(getCacheKey(HOUSE_REDIS_KEY, houseId), super.houses.getHouse(houseId));
+            }
             cache.delete(getCacheKey(USER_REDIS_KEY, userId));
+        }
         return result;
     }
 
@@ -99,7 +105,7 @@ public class CacheDatabaseLayer extends AbstractDatabase implements Database {
     public Result<User> updateUser(Cookie session, String userId, User user) {
         var result = super.updateUser(session, userId, user);
         if(result.isOK())
-            cache.set(getCacheKey(USER_REDIS_KEY, userId), new UserDAO(user));
+            cache.set(getCacheKey(USER_REDIS_KEY, userId), new UserDAO(result.value()));
         return result;
     }
 
@@ -117,10 +123,23 @@ public class CacheDatabaseLayer extends AbstractDatabase implements Database {
     }
 
     @Override
+    public Result<House> createHouse(Cookie session, House house){
+        var result = super.createHouse(session, house);
+        if (result.isOK()){
+            var ownerId = result.value().getOwnerId();
+            cache.set(getCacheKey(USER_REDIS_KEY, ownerId), super.users.getUser(ownerId));
+        }
+        return result;
+    }
+
+    @Override
     public Result<House> deleteHouse(Cookie session, String houseId) {
         var result = super.deleteHouse(session, houseId);
-        if(result.isOK())
+        if(result.isOK()){
+            var ownerId = result.value().getOwnerId();
+            cache.set(getCacheKey(USER_REDIS_KEY, ownerId), super.users.getUser(ownerId));
             cache.delete(getCacheKey(HOUSE_REDIS_KEY, houseId));
+        }
         return result;
     }
 
@@ -128,9 +147,25 @@ public class CacheDatabaseLayer extends AbstractDatabase implements Database {
     public Result<House> updateHouse(Cookie session, String houseId, House houseToUpdate) {
         var result = super.updateHouse(session, houseId, houseToUpdate);
         if(result.isOK())
-            cache.set(getCacheKey(HOUSE_REDIS_KEY, houseId), new HouseDAO(houseToUpdate));
+            cache.set(getCacheKey(HOUSE_REDIS_KEY, houseId), new HouseDAO(result.value()));
         return result;
     }
+
+    /*-------------------------------------------------- RENTALS -----------------------------------------------------*/
+
+    @Override
+    public Result<String> createRental(Cookie session, String houseId, Rental rental) {
+        var result = super.createRental(session, houseId, rental);
+        if (result.isOK()){
+            var tenantId = rental.getTenantId();
+            cache.set(getCacheKey(USER_REDIS_KEY, tenantId), super.users.getUser(tenantId));
+
+            cache.set(getCacheKey(HOUSE_REDIS_KEY, houseId), super.houses.getHouse(houseId));
+        }
+        return result;
+    }
+
+
 
     /*---------------------------------------------------- UTILS -----------------------------------------------------*/
 

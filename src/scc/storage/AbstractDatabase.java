@@ -98,13 +98,11 @@ public abstract class AbstractDatabase implements Database {
         }
 
         for(String houseId : user.getHouseIds()){
-            var house = this.getHouseDAO(houseId);
-            house.setOwnerId("Deleted User");
+            houses.updateHouse(houseId, CosmosPatchOperations.create().replace("/ownerId", "Deleted User"));
         }
 
         for(String rentalId : user.getRentalIds()){
-            var rental = rentals.getRental(rentalId);
-            rental.setTenantId("Deleted User");
+            rentals.updateRental(rentalId, CosmosPatchOperations.create().replace("/tenantId", "Deleted User"));
         }
 
         users.delUserById(userId);
@@ -229,12 +227,7 @@ public abstract class AbstractDatabase implements Database {
 
         var houseId = UUID.randomUUID().toString();
 
-
-        var ownerHouseIds = new ArrayList<>(Arrays.asList(owner.getHouseIds()));
-        ownerHouseIds.add(houseId);
-
-        users.updateUser(owner.getId(), CosmosPatchOperations.create().set("/houseIds", ownerHouseIds));
-
+        users.updateUser(owner.getId(), CosmosPatchOperations.create().add("/houseIds/-", houseId));
         house.setId(houseId);
         return Result.ok(houses.putHouse(new HouseDAO(house)).getItem().toHouse());
     }
@@ -283,10 +276,12 @@ public abstract class AbstractDatabase implements Database {
         if(!authRes.isOK())
             return Result.error(authRes.error());
 
-        var ownerHouseIds = new ArrayList<>(Arrays.asList(owner.getHouseIds()));
-        ownerHouseIds.remove(houseId);
+        var ownerHouseIdx = Arrays.asList(owner.getHouseIds()).indexOf(houseId);
+        users.updateUser(owner.getId(), CosmosPatchOperations.create().remove("/houseIds/"+ownerHouseIdx));
 
-        users.updateUser(owner.getId(), CosmosPatchOperations.create().set("/houseIds", ownerHouseIds));
+        for(RentalDAO rental : rentals.getRentalsByHouse(houseId, 0, house.getPeriods().length)){
+            rentals.updateRental(rental.getId(), CosmosPatchOperations.create().replace("/houseId", "Deleted House"));
+        }
 
         houses.deleteHouseById(houseId);
         return Result.ok(house.toHouse());
@@ -371,48 +366,46 @@ public abstract class AbstractDatabase implements Database {
         period.setAvailable(false);
         rental.setPeriod(period);
 
-        housePeriods.set(periodIdx, period);
-        houses.updateHouse(houseId, CosmosPatchOperations.create().set("/periods", housePeriods));
+        houses.updateHouse(houseId, CosmosPatchOperations.create().replace("/periods/"+periodIdx+"/available", false));
 
-        var tenantRentalIds = new ArrayList<>(Arrays.asList(tenant.getRentalIds()));
-        tenantRentalIds.add(rental.getId());
-        users.updateUser(tenant.getId(), CosmosPatchOperations.create().set("/rentalIds", tenantRentalIds));
+        users.updateUser(tenant.getId(), CosmosPatchOperations.create().set("/rentalIds/-", rental.getId()));
         
         return Result.ok(rentals.putRental(new RentalDAO(rental)).getItem().getId());
     }
 
     public Result<Rental> updateRental(Cookie session, String houseId, String rentalId, Rental rentalToUpdate) {
-        if(houseId == null || rentalId == null || rentalToUpdate == null )
-            return Result.error(Response.Status.BAD_REQUEST);
-        if (!this.hasHouse(houseId))
-            return Result.error(Response.Status.NOT_FOUND);
-
-        var rental = rentals.getRental(rentalId);
-        if (rental == null)
-            return Result.error(Response.Status.NOT_FOUND);
-
-        var authRes = checkCookie(session, rental.getLandlordId());
-        if(!authRes.isOK())
-            return Result.error(authRes.error());
-
-        var updateOps = CosmosPatchOperations.create();
-        var tenantIdToUpdate = rental.getTenantId();
-        var periodToUpdate = rental.getPeriod();
-
-        if(tenantIdToUpdate != null){
-            var tenant = this.getUser(tenantIdToUpdate);
-            if(tenant == null)
-                return Result.error(Response.Status.NOT_FOUND);
-            updateOps.replace("/tenantId", tenantIdToUpdate);
-
-            var tenantRentalIds = new ArrayList<>(Arrays.asList(tenant.getRentalIds()));
-            tenantRentalIds.add(rental.getId());
-            users.updateUser(tenant.getId(), CosmosPatchOperations.create().set("/rentalIds", tenantRentalIds));
-        }
-        if(periodToUpdate != null)
-            updateOps.replace("/period", periodToUpdate);
-
-        return Result.ok(rentals.updateRental(rentalId, updateOps).getItem().toRental());
+//        if(houseId == null || rentalId == null || rentalToUpdate == null )
+//            return Result.error(Response.Status.BAD_REQUEST);
+//        if (!this.hasHouse(houseId))
+//            return Result.error(Response.Status.NOT_FOUND);
+//
+//        var rental = rentals.getRental(rentalId);
+//        if (rental == null)
+//            return Result.error(Response.Status.NOT_FOUND);
+//
+//        var authRes = checkCookie(session, rental.getLandlordId());
+//        if(!authRes.isOK())
+//            return Result.error(authRes.error());
+//
+//        var updateOps = CosmosPatchOperations.create();
+//        var tenantIdToUpdate = rental.getTenantId();
+//        var periodToUpdate = rental.getPeriod();
+//
+//        if(tenantIdToUpdate != null){
+//            var tenant = this.getUser(tenantIdToUpdate);
+//            if(tenant == null)
+//                return Result.error(Response.Status.NOT_FOUND);
+//            updateOps.replace("/tenantId", tenantIdToUpdate);
+//
+//            var tenantRentalIds = new ArrayList<>(Arrays.asList(tenant.getRentalIds()));
+//            tenantRentalIds.add(rental.getId());
+//            users.updateUser(tenant.getId(), CosmosPatchOperations.create().set("/rentalIds", tenantRentalIds));
+//        }
+//        if(periodToUpdate != null)
+//            updateOps.replace("/period", periodToUpdate);
+//
+//        return Result.ok(rentals.updateRental(rentalId, updateOps).getItem().toRental());
+        return Result.error(Response.Status.NOT_IMPLEMENTED);
     }
 
     public Result<List<Rental>> listHouseRentals(Cookie session, String houseId, int start, int length) {
