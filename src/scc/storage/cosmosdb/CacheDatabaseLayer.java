@@ -1,7 +1,6 @@
-package scc.storage;
+package scc.storage.cosmosdb;
 
 import com.azure.cosmos.CosmosClient;
-import com.azure.cosmos.models.CosmosPatchOperations;
 import com.azure.storage.blob.BlobContainerClient;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.NewCookie;
@@ -11,12 +10,13 @@ import scc.data.dao.HouseDAO;
 import scc.data.dao.UserDAO;
 import scc.data.dto.*;
 import scc.server.auth.LoginDetails;
+import scc.storage.Database;
 import scc.utils.Hash;
 import scc.utils.Result;
 
 import java.util.UUID;
 
-public class CacheDatabaseLayer extends AbstractDatabase implements Database {
+public class CacheDatabaseLayer extends CosmosDBLayer implements Database {
 
     private final RedisCache cache;
     private static final String SESSION_REDIS_KEY = "session:";
@@ -31,7 +31,7 @@ public class CacheDatabaseLayer extends AbstractDatabase implements Database {
                               String questionCosmosDBContainerName,
                               BlobContainerClient userBlobContainer,
                               BlobContainerClient houseBlobContainer) {
-        super(cClient, cosmosdbDatabase, userCosmosDBContainerName, houseCosmosDBContainerName, rentalCosmosDBContainerName, questionCosmosDBContainerName, userBlobContainer, houseBlobContainer);
+        super(cClient.getDatabase(cosmosdbDatabase), userCosmosDBContainerName, houseCosmosDBContainerName, rentalCosmosDBContainerName, questionCosmosDBContainerName, userBlobContainer, houseBlobContainer);
         cache = new RedisCache();
     }
 

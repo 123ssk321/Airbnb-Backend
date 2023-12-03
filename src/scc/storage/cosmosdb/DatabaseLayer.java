@@ -1,4 +1,4 @@
-package scc.storage;
+package scc.storage.cosmosdb;
 
 import com.azure.cosmos.CosmosClient;
 import com.azure.storage.blob.BlobContainerClient;
@@ -6,10 +6,11 @@ import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.Response;
 import scc.data.dao.*;
 import scc.server.auth.LoginDetails;
+import scc.storage.Database;
 import scc.utils.Result;
 
 
-public class DatabaseLayer extends AbstractDatabase implements Database{
+public class DatabaseLayer extends CosmosDBLayer implements Database {
 
     public DatabaseLayer(CosmosClient cClient,
                          String cosmosdbDatabase,
@@ -19,7 +20,7 @@ public class DatabaseLayer extends AbstractDatabase implements Database{
                          String questionCosmosDBContainerName,
                          BlobContainerClient userBlobContainer,
                          BlobContainerClient houseBlobContainer){
-        super(cClient, cosmosdbDatabase, userCosmosDBContainerName, houseCosmosDBContainerName, rentalCosmosDBContainerName, questionCosmosDBContainerName, userBlobContainer, houseBlobContainer);
+        super(cClient.getDatabase(cosmosdbDatabase), userCosmosDBContainerName, houseCosmosDBContainerName, rentalCosmosDBContainerName, questionCosmosDBContainerName, userBlobContainer, houseBlobContainer);
 
     }
 

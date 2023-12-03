@@ -1,8 +1,5 @@
 package scc.storage;
 
-import com.azure.cosmos.CosmosClient;
-import com.azure.cosmos.models.CosmosPatchOperations;
-import com.azure.storage.blob.BlobContainerClient;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.Response;
 import scc.data.dao.HouseDAO;
@@ -10,17 +7,10 @@ import scc.data.dao.QuestionDAO;
 import scc.data.dao.RentalDAO;
 import scc.data.dao.UserDAO;
 import scc.data.dto.*;
-import scc.mgt.AzureProperties;
-import scc.mgt.CognitiveSearch;
 import scc.server.auth.LoginDetails;
 import scc.server.resources.MediaResource;
-import scc.storage.cosmosdb.HousesCDB;
-import scc.storage.cosmosdb.QuestionsCDB;
-import scc.storage.cosmosdb.RentalsCDB;
-import scc.storage.cosmosdb.UsersCDB;
 import scc.utils.Result;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -28,34 +18,19 @@ import java.util.logging.Logger;
 
 public abstract class AbstractDatabase implements Database {
 
-    protected final UsersCDB users;
-    protected final MediaBlobStorage media;
-    protected final HousesCDB houses;
-    protected final RentalsCDB rentals;
-    protected final QuestionsCDB questions;
+    protected final UsersStorage users;
+    protected final HousesStorage houses;
+    protected final RentalsStorage rentals;
+    protected final QuestionsStorage questions;
+    protected final MediaStorage media;
     protected static final Logger Log = Logger.getLogger(AbstractDatabase.class.getName());
-    protected final CognitiveSearch cognitiveSearch;
 
-    protected AbstractDatabase(CosmosClient cClient,
-                         String cosmosdbDatabase,
-                         String userCosmosDBContainerName,
-                         String houseCosmosDBContainerName,
-                         String rentalCosmosDBContainerName,
-                         String questionCosmosDBContainerName,
-                         BlobContainerClient userBlobContainer,
-                         BlobContainerClient houseBlobContainer){
-        var db = cClient.getDatabase(cosmosdbDatabase);
-
-        users = new UsersCDB(db.getContainer(userCosmosDBContainerName));
-        houses = new HousesCDB(db.getContainer(houseCosmosDBContainerName));
-        rentals = new RentalsCDB(db.getContainer(rentalCosmosDBContainerName));
-        questions = new QuestionsCDB(db.getContainer(questionCosmosDBContainerName));
-        media = new MediaBlobStorage(userBlobContainer, houseBlobContainer);
-
-        if(System.getenv(AzureProperties.USE_COG_SEARCH).equals(AzureProperties.USE_COG_SEARCH_TRUE))
-            cognitiveSearch = new CognitiveSearch();
-        else
-            cognitiveSearch = null;
+    protected AbstractDatabase(UsersStorage users, HousesStorage houses, RentalsStorage rentals, QuestionsStorage questions, MediaStorage media){
+        this.users = users;
+        this.houses = houses;
+        this.rentals = rentals;
+        this.questions = questions;
+        this.media = media;
     }
 
     /*---------------------------------------------------- AUTH ------------------------------------------------------*/
@@ -74,7 +49,7 @@ public abstract class AbstractDatabase implements Database {
         }
         if(this.hasUser(user.getId()))
             return Result.error(Response.Status.CONFLICT);
-        var value = users.putUser(new UserDAO(user)).getItem().toUser();
+        var value = users.putUser(new UserDAO(user)).toUser();
         value.setPwd(user.getPwd());
         return Result.ok(value);
     }
@@ -96,15 +71,6 @@ public abstract class AbstractDatabase implements Database {
         if(user == null){
             return Result.error(Response.Status.NOT_FOUND);
         }
-
-        for(String houseId : user.getHouseIds()){
-            houses.updateHouse(houseId, CosmosPatchOperations.create().replace("/ownerId", "Deleted User"));
-        }
-
-        for(String rentalId : user.getRentalIds()){
-            rentals.updateRental(rentalId, CosmosPatchOperations.create().replace("/tenantId", "Deleted User"));
-        }
-
         users.delUserById(userId);
         return Result.ok(user.toUser());
     }
@@ -123,30 +89,7 @@ public abstract class AbstractDatabase implements Database {
             return Result.error(Response.Status.NOT_FOUND);
         }
 
-        var updateOps = getCosmosPatchOperations(user);
-
-        var userDAO  = users.updateUser(userId, updateOps).getItem();
-
-        return Result.ok(userDAO.toUser());
-    }
-
-    private static CosmosPatchOperations getCosmosPatchOperations(User user) {
-        var updateOps = CosmosPatchOperations.create();
-        var nameToUpdate = user.getName();
-        var pwdToUpdate = user.getPwd();
-        var photoIdToUpdate = user.getPhotoId();
-        var houseIdsToUpdate = user.getHouseIds();
-
-        if(nameToUpdate != null)
-            updateOps.replace("/name", nameToUpdate);
-        if(pwdToUpdate != null)
-            updateOps.replace("/pwd", pwdToUpdate);
-        if(photoIdToUpdate != null)
-            updateOps.replace("/photoId", photoIdToUpdate);
-        if(houseIdsToUpdate != null && houseIdsToUpdate.length > 1) {
-            updateOps.set("/houseIds", houseIdsToUpdate);
-        }
-        return updateOps;
+        return Result.ok(user);
     }
 
     public Result<List<HouseOwner>> listUserHouses(Cookie session, String ownerId, int start, int length) {
@@ -161,7 +104,7 @@ public abstract class AbstractDatabase implements Database {
         if(!authRes.isOK())
             return Result.error(authRes.error());
 
-        return Result.ok(houses.getHousesByOwner(ownerId, start, length).stream().toList());
+        return Result.ok(houses.getHousesByOwner(ownerId, start, length));
     }
 
     public Result<List<Rental>> listUserRentals(Cookie session, String userId, int start, int length) {
@@ -226,10 +169,8 @@ public abstract class AbstractDatabase implements Database {
             return Result.error(authRes.error());
 
         var houseId = UUID.randomUUID().toString();
-
-        users.updateUser(owner.getId(), CosmosPatchOperations.create().add("/houseIds/-", houseId));
         house.setId(houseId);
-        return Result.ok(houses.putHouse(new HouseDAO(house)).getItem().toHouse());
+        return Result.ok(houses.putHouse(new HouseDAO(house)).toHouse());
     }
 
     public Result<House> getHouse(String houseId){
@@ -241,9 +182,6 @@ public abstract class AbstractDatabase implements Database {
         if(house == null){
             return Result.error(Response.Status.NOT_FOUND);
         }
-
-        var updateViews = new Thread(() -> houses.updateHouse(houseId, CosmosPatchOperations.create().increment("/views", 1)));
-        updateViews.start();
 
         house.setViews(house.getViews()+1);
         return Result.ok(house.toHouse());
@@ -276,13 +214,6 @@ public abstract class AbstractDatabase implements Database {
         if(!authRes.isOK())
             return Result.error(authRes.error());
 
-        var ownerHouseIdx = Arrays.asList(owner.getHouseIds()).indexOf(houseId);
-        users.updateUser(owner.getId(), CosmosPatchOperations.create().remove("/houseIds/"+ownerHouseIdx));
-
-        for(RentalDAO rental : rentals.getRentalsByHouse(houseId, 0, house.getPeriods().length)){
-            rentals.updateRental(rental.getId(), CosmosPatchOperations.create().replace("/houseId", "Deleted House"));
-        }
-
         houses.deleteHouseById(houseId);
         return Result.ok(house.toHouse());
     }
@@ -304,37 +235,18 @@ public abstract class AbstractDatabase implements Database {
         if(!authRes.isOK())
             return Result.error(authRes.error());
 
-        var updateOps = CosmosPatchOperations.create();
-        var nameToUpdate = house.getName();
-        var descriptionToUpdate = house.getDescription();
-        var periodsToUpdate = house.getPeriods();
-
-        if(nameToUpdate != null)
-            updateOps.replace("/name", nameToUpdate);
-        if(descriptionToUpdate != null)
-            updateOps.replace("/description", descriptionToUpdate);
-        if(periodsToUpdate != null) {
-            updateOps.set("/periods", periodsToUpdate);
-        }
-        var houseDAO = houses.updateHouse(houseId, updateOps).getItem();
-        return Result.ok(houseDAO.toHouse());
+        return Result.ok(house.toHouse());
     }
 
     public Result<List<HouseList>> searchHouses(String location, String startDate, String endDate, int start, int length) {
         if(location == null){
             return Result.error(Response.Status.BAD_REQUEST);
         }
-        return Result.ok(houses.searchHouses(location, startDate, endDate, start, length).stream().toList());
+        return Result.ok(houses.searchHouses(location, startDate, endDate, start, length));
     }
 
-    public Result<List<HouseSearch>> searchByNameAndDescription(String queryText, String ownerId, Boolean useName,
-                                                        Boolean useDescription, int start, int length) {
-
-        if(cognitiveSearch == null)
-            return  Result.ok();
-
-        return Result.ok(cognitiveSearch.searchHouses(queryText, ownerId, useName, useDescription, start, length));
-    }
+    public abstract Result<List<HouseSearch>> searchByNameAndDescription(String queryText, String ownerId, Boolean useName,
+                                                        Boolean useDescription, int start, int length);
 
     /*-------------------------------------------------- RENTALS -----------------------------------------------------*/
 
@@ -366,47 +278,10 @@ public abstract class AbstractDatabase implements Database {
         period.setAvailable(false);
         rental.setPeriod(period);
 
-        houses.updateHouse(houseId, CosmosPatchOperations.create().replace("/periods/"+periodIdx+"/available", false));
-
-        users.updateUser(tenant.getId(), CosmosPatchOperations.create().set("/rentalIds/-", rental.getId()));
-        
-        return Result.ok(rentals.putRental(new RentalDAO(rental)).getItem().getId());
+        return Result.ok(rentals.putRental(new RentalDAO(rental)).getId());
     }
 
-    public Result<Rental> updateRental(Cookie session, String houseId, String rentalId, Rental rentalToUpdate) {
-//        if(houseId == null || rentalId == null || rentalToUpdate == null )
-//            return Result.error(Response.Status.BAD_REQUEST);
-//        if (!this.hasHouse(houseId))
-//            return Result.error(Response.Status.NOT_FOUND);
-//
-//        var rental = rentals.getRental(rentalId);
-//        if (rental == null)
-//            return Result.error(Response.Status.NOT_FOUND);
-//
-//        var authRes = checkCookie(session, rental.getLandlordId());
-//        if(!authRes.isOK())
-//            return Result.error(authRes.error());
-//
-//        var updateOps = CosmosPatchOperations.create();
-//        var tenantIdToUpdate = rental.getTenantId();
-//        var periodToUpdate = rental.getPeriod();
-//
-//        if(tenantIdToUpdate != null){
-//            var tenant = this.getUser(tenantIdToUpdate);
-//            if(tenant == null)
-//                return Result.error(Response.Status.NOT_FOUND);
-//            updateOps.replace("/tenantId", tenantIdToUpdate);
-//
-//            var tenantRentalIds = new ArrayList<>(Arrays.asList(tenant.getRentalIds()));
-//            tenantRentalIds.add(rental.getId());
-//            users.updateUser(tenant.getId(), CosmosPatchOperations.create().set("/rentalIds", tenantRentalIds));
-//        }
-//        if(periodToUpdate != null)
-//            updateOps.replace("/period", periodToUpdate);
-//
-//        return Result.ok(rentals.updateRental(rentalId, updateOps).getItem().toRental());
-        return Result.error(Response.Status.NOT_IMPLEMENTED);
-    }
+    public abstract Result<Rental> updateRental(Cookie session, String houseId, String rentalId, Rental rentalToUpdate);
 
     public Result<List<Rental>> listHouseRentals(Cookie session, String houseId, int start, int length) {
         if(houseId == null)
@@ -453,7 +328,7 @@ public abstract class AbstractDatabase implements Database {
         question.setId(UUID.randomUUID().toString());
         var questionDao = new QuestionDAO(question);
         questionDao.setHouseId(houseId);
-        return Result.ok(questions.putQuestion(questionDao).getItem().getId());
+        return Result.ok(questions.putQuestion(questionDao).getId());
     }
 
     public Result<String> createReply(Cookie session, String houseId, String questionId, Reply reply) {
@@ -473,10 +348,6 @@ public abstract class AbstractDatabase implements Database {
             return Result.error((Response.Status.FORBIDDEN));
         }
 
-        var updateOps = CosmosPatchOperations.create();
-        updateOps.replace("/reply", reply);
-
-        questions.addReply(questionId, updateOps);
         return Result.ok("The reply was created");
 
     }

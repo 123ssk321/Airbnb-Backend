@@ -22,8 +22,8 @@ public class RedisCache {
 		poolConfig.setTestWhileIdle(true);
 		poolConfig.setNumTestsPerEvictionRun(3);
 		poolConfig.setBlockWhenExhausted(true);
-		instance = new JedisPool(poolConfig, System.getenv(AzureProperties.REDISH_HOST_NAME), 6380, 1000,
-				System.getenv(AzureProperties.REDIS_KEY), true);
+		instance = new JedisPool(poolConfig, System.getenv(AzureProperties.REDISH_HOST_NAME), 6379, 1000,
+				System.getenv(AzureProperties.REDIS_KEY));
 		return instance;
 	}
 
