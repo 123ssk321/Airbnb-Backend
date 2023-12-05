@@ -1,7 +1,6 @@
 package scc.data.dao;
 
-import scc.data.dto.House;
-import scc.data.dto.Period;
+import scc.data.dto.*;
 
 import java.util.Arrays;
 
@@ -104,6 +103,20 @@ public class HouseDAO {
         return new House(id, name, ownerId, location, description, photoIds == null? null : Arrays.copyOf(photoIds, photoIds.length),
                 periods == null? null : Arrays.copyOf(periods, periods.length), views);
     }
+
+    public HouseList toHouseList(){
+        return new HouseList(id, name, location, photoIds[0], periods[0]);
+    }
+
+    public DiscountedRental toDiscountedRental(){
+        return new DiscountedRental(id, name, ownerId, location, photoIds[0], periods[0]);
+    }
+
+    public HouseOwner toHouseOwner(){
+        return new HouseOwner(id, name, ownerId, location, photoIds[0]);
+    }
+
+
     @Override
     public String toString() {
         return "HouseDAO [_rid=" + _rid +

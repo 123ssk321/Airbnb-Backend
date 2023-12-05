@@ -1,11 +1,16 @@
 package scc.storage.mongodb.collection;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReturnDocument;
 import org.bson.conversions.Bson;
 import scc.data.dao.RentalDAO;
 import scc.storage.RentalsStorage;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import static com.mongodb.client.model.Filters.eq;
 
 public class RentalsCollection implements RentalsStorage {
     private final MongoCollection<RentalDAO> collection;
@@ -15,40 +20,42 @@ public class RentalsCollection implements RentalsStorage {
     }
     @Override
     public RentalDAO putRental(RentalDAO rental) {
+        if(collection.insertOne(rental).wasAcknowledged())
+            return rental;
         return null;
     }
 
     @Override
     public RentalDAO getRental(String rentalId) {
-        return null;
+        return collection.find(eq("id", rentalId)).first();
     }
 
     @Override
     public boolean hasRental(String rentalId) {
-        return false;
+        return this.getRental(rentalId) != null;
     }
 
     @Override
     public void deleteRentalById(String rentalId) {
-
+        collection.deleteOne(eq("id", rentalId));
     }
 
     @Override
     public void deleteRental(RentalDAO rental) {
-
+        collection.deleteOne(eq("id", rental.getId()));
     }
 
     public RentalDAO updateRental(String rentalId, Bson updates){
-        return null;
+        return collection.findOneAndUpdate(eq("id", rentalId), updates, new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
     }
 
     @Override
     public List<RentalDAO> getRentalsByUser(String userId, int start, int length) {
-        return null;
+        return collection.find(eq("tenantId", userId)).skip(start).limit(length).into(new ArrayList<>());
     }
 
     @Override
     public List<RentalDAO> getRentalsByHouse(String houseId, int start, int length) {
-        return null;
+        return collection.find(eq("houseId", houseId)).skip(start).limit(length).into(new ArrayList<>());
     }
 }

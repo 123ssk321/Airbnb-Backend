@@ -35,8 +35,10 @@ public class MainApplication extends Application
 {
 	private static final String DATABASE_TYPE = "DATABASE_TYPE";
 	private static final String COSMOSDB = "COSMOSDB";
+
 	private static final String MONGODB = "MONGODB";
 	private static final String MONGODB_NAME = "MONGODB_NAME";
+	private static final String MONGODB_CONNECTION_STRING = "MONGODB_CONNECTION_STRING";
 
 	private Set<Object> singletons = new HashSet<Object>();
 	private Set<Class<?>> resources = new HashSet<Class<?>>();
@@ -84,7 +86,7 @@ public class MainApplication extends Application
 						houseBlobContainer);
 			}
 		} else {
-			ConnectionString connectionString = new ConnectionString("");
+			ConnectionString connectionString = new ConnectionString(System.getenv(MONGODB_CONNECTION_STRING));
 			CodecRegistry pojoCodecRegistry = fromProviders(PojoCodecProvider.builder().automatic(true).build());
 			CodecRegistry codecRegistry = fromRegistries(MongoClientSettings.getDefaultCodecRegistry(), pojoCodecRegistry);
 			MongoClientSettings clientSettings = MongoClientSettings.builder()
