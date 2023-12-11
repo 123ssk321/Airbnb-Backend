@@ -1,23 +1,23 @@
-package scc.storage.cosmosdb;
+package scc.storage.cosmosdb.container;
 
 import com.azure.cosmos.CosmosContainer;
 import com.azure.cosmos.models.*;
-import com.azure.cosmos.util.CosmosPagedIterable;
-import scc.data.dao.HouseDAO;
 import scc.data.dao.RentalDAO;
+import scc.storage.RentalsStorage;
 
+import java.util.List;
 import java.util.logging.Logger;
 
-public class RentalsCDB {
+public class RentalsContainer implements RentalsStorage {
     private final CosmosContainer container;
-    private static final Logger Log = Logger.getLogger(RentalsCDB.class.getName());
+    private static final Logger Log = Logger.getLogger(RentalsContainer.class.getName());
 
-    public RentalsCDB(CosmosContainer container) {
+    public RentalsContainer(CosmosContainer container) {
         this.container = container;
     }
     
-    public CosmosItemResponse<RentalDAO> putRental(RentalDAO rental){
-        return container.createItem(rental);
+    public RentalDAO putRental(RentalDAO rental){
+        return container.createItem(rental).getItem();
     }
 
     public RentalDAO getRental(String rentalId){
@@ -39,33 +39,33 @@ public class RentalsCDB {
         return this.getRental(rentalId) != null;
     }
 
-    public CosmosItemResponse<Object> deleteRentalById(String rentalId) {
+    public void deleteRentalById(String rentalId) {
         PartitionKey key = new PartitionKey(rentalId);
-        return container.deleteItem(rentalId, key, new CosmosItemRequestOptions());
+        container.deleteItem(rentalId, key, new CosmosItemRequestOptions());
     }
 
-    public CosmosItemResponse<Object> deleteRental(RentalDAO rental) {
-        return container.deleteItem(rental, new CosmosItemRequestOptions());
+    public void deleteRental(RentalDAO rental) {
+        container.deleteItem(rental, new CosmosItemRequestOptions());
     }
 
-    public CosmosItemResponse<RentalDAO> updateRental(String rentalId, CosmosPatchOperations updateOps){
+    public RentalDAO updateRental(String rentalId, CosmosPatchOperations updateOps){
         PartitionKey key = new PartitionKey(rentalId);
-        return container.patchItem(rentalId, key, updateOps, RentalDAO.class);
+        return container.patchItem(rentalId, key, updateOps, RentalDAO.class).getItem();
     }
 
-    public CosmosPagedIterable<RentalDAO> getRentalsByUser(String userId, int start, int length) {
+    public List<RentalDAO> getRentalsByUser(String userId, int start, int length) {
         return container.queryItems(
                 "SELECT * FROM rentals WHERE rentals.tenantId=\"" + userId + "\" " +
                         "OFFSET " + start + " LIMIT " + length,
                 new CosmosQueryRequestOptions(),
-                RentalDAO.class);
+                RentalDAO.class).stream().toList();
     }
-    public CosmosPagedIterable<RentalDAO> getRentalsByHouse(String houseId, int start, int length) {
+    public List<RentalDAO> getRentalsByHouse(String houseId, int start, int length) {
         return container.queryItems(
                 "SELECT * FROM rentals WHERE rentals.houseId=\"" + houseId + "\" " +
                         "OFFSET " + start + " LIMIT " + length,
                 new CosmosQueryRequestOptions(),
-                RentalDAO.class);
+                RentalDAO.class).stream().toList();
     }
 
 }

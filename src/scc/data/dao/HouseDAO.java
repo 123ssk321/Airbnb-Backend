@@ -1,9 +1,9 @@
 package scc.data.dao;
 
-import scc.data.dto.House;
-import scc.data.dto.Period;
+import scc.data.dto.*;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HouseDAO {
     private String _rid;
@@ -13,16 +13,16 @@ public class HouseDAO {
     private String ownerId;
     private String location;
     private String description;
-    private String[] photoIds;
-    private Period[] periods;
+    private List<String> photoIds;
+    private List<Period> periods;
     private long views;
 
 
     public HouseDAO() {}
 
-    public HouseDAO(House h) {this(h.getId(), h.getName(), h.getOwnerId(), h.getLocation(), h.getDescription(), h.getPhotoIds(), h.getPeriods(), 0L);}
+    public HouseDAO(House h) {this(h.getId(), h.getName(), h.getOwnerId(), h.getLocation(), h.getDescription(), new ArrayList<>(List.of(h.getPhotoIds())), new ArrayList<>(List.of(h.getPeriods())), 0L);}
 
-    public HouseDAO(String id, String name, String ownerId, String location, String description, String[] photoIds, Period[] periods, long views) {
+    public HouseDAO(String id, String name, String ownerId, String location, String description, List<String> photoIds, List<Period> periods, long views) {
         super();
         this.id = id;
         this.name = name;
@@ -79,16 +79,16 @@ public class HouseDAO {
     public void setDescription(String description) {
         this.description = description;
     }
-    public String[] getPhotoIds() {
+    public List<String> getPhotoIds() {
         return photoIds;
     }
-    public void setPhotoIds(String[] photoIds) {
+    public void setPhotoIds(List<String> photoIds) {
         this.photoIds = photoIds;
     }
-    public Period[] getPeriods() {
+    public List<Period> getPeriods() {
         return periods;
     }
-    public void setPeriods(Period[] periods) {
+    public void setPeriods(List<Period> periods) {
         this.periods = periods;
     }
 
@@ -101,19 +101,34 @@ public class HouseDAO {
     }
 
     public House toHouse() {
-        return new House(id, name, ownerId, location, description, photoIds == null? null : Arrays.copyOf(photoIds, photoIds.length),
-                periods == null? null : Arrays.copyOf(periods, periods.length), views);
+        return new House(id, name, ownerId, location, description, photoIds == null? null : photoIds.toArray(new String[0]),
+                periods == null? null : periods.toArray(new Period[0]), views);
     }
+
+    public HouseList toHouseList(){
+        return new HouseList(id, name, location, photoIds.get(0), periods);
+    }
+
+    public DiscountedRental toDiscountedRental(){
+        return new DiscountedRental(id, name, ownerId, location, photoIds.get(0), periods);
+    }
+
+    public HouseOwner toHouseOwner(){
+        return new HouseOwner(id, name, ownerId, location, photoIds.get(0));
+    }
+
+
     @Override
     public String toString() {
         return "HouseDAO [_rid=" + _rid +
                 ", _ts=" + _ts +
+                ", _id=" + id +
                 ", name=" + name +
                 ", owner=" + ownerId +
                 ", location=" + location +
                 ", description='" + description +
-                ", photos=" + Arrays.toString(photoIds) +
-                ", periods=" + Arrays.toString(periods) +
+                ", photos=" + photoIds +
+                ", periods=" + periods +
                 ", views=" + views +
                 ']';
     }

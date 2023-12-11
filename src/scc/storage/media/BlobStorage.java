@@ -1,15 +1,16 @@
-package scc.storage;
+package scc.storage.media;
 
 import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobContainerClient;
 import scc.server.resources.MediaResource.BlobType;
+import scc.storage.MediaStorage;
 import scc.utils.Hash;
 
-public class MediaBlobStorage {
+public class BlobStorage implements MediaStorage {
     private final BlobContainerClient userBlobContainerClient;
     private final BlobContainerClient houseBlobContainerClient;
 
-    public MediaBlobStorage(BlobContainerClient userBlobContainerClient, BlobContainerClient houseBlobContainerClient) {
+    public BlobStorage(BlobContainerClient userBlobContainerClient, BlobContainerClient houseBlobContainerClient) {
         this.userBlobContainerClient = userBlobContainerClient;
         this.houseBlobContainerClient = houseBlobContainerClient;
     }

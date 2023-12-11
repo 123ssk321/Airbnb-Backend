@@ -29,6 +29,26 @@ public class HouseSearch {
 
     public String getPhotoIds() { return photoIds; }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setPhotoIds(String photoIds) {
+        this.photoIds = photoIds;
+    }
+
     @Override
     public String toString() {
         return "HouseList [" +

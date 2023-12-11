@@ -291,7 +291,7 @@ function selectPeriod(context, events, done) {
 		context.vars.rentalLst.constructor === Array &&
 		context.vars.rentalLst.length > 0) {
 		let house = context.vars.rentalLst.sample()
-		let period = house.period
+		let period = house.periods.sample()
 
 		if(period.available){
 			let strRental = `{"id": null,
@@ -453,7 +453,7 @@ function loadData() {
 	if( fs.existsSync( '/images')) 
 		basefile = '/images/house.'
 	else
-		basefile =  'images/house.'	
+		basefile =  'images/house.'
 	for( i = 1; i <= 50 ; i++) {
 		let img  = fs.readFileSync(basefile + i + '.jpg')
 		images.push( img)

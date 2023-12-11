@@ -1,0 +1,197 @@
+# ------------------------------------------- PERSISTENT-VOLUME-CLAIMS -------------------------------------------------
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azure-managed-disk
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: azurefile
+  resources:
+    requests:
+      storage: 1Gi
+---
+#apiVersion: v1
+#kind: PersistentVolume
+#metadata:
+#  name: mongo-data
+#spec:
+#  accessModes:
+#    - ReadWriteOnce
+#  capacity:
+#    storage: 1Gi
+#  hostPath:
+#    path: /data/mongo
+#---
+#apiVersion: v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  name: pvc
+#spec:
+#  storageClassName: ""
+#  accessModes:
+#    - ReadWriteOnce
+#  volumeName: pv
+#  resources:
+#    requests:
+#      storage: 1Gi
+#---
+# --------------------------------------------------- MONGODB ----------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - image: mongo
+          name: mongo
+#          args: ["--dbpath","/data/db"]
+          ports:
+           - containerPort: 27017
+#          volumeMounts:
+#            - name: "mongo-data-dir"
+#              mountPath: "/data/db"
+#      volumes:
+#        - name: "mongo-data-dir"
+#          persistentVolumeClaim:
+#            claimName: "pvc"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+spec:
+  ports:
+    - port: 27017
+  selector:
+    app: mongo
+---
+# --------------------------------------------------- REDIS ------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+        - name: redis
+          image: redis
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1024Mi
+          ports:
+            - containerPort: 6379
+              name: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  ports:
+    - port: 6379
+  selector:
+    app: redis
+# ------------------------------------------------ AIRBNB-BACKEND ------------------------------------------------------
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airbnb-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: airbnb-backend
+  template:
+    metadata:
+      labels:
+        app: airbnb-backend
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+        - name: airbnb-backend
+          image: sskumar777/scc2324-app
+          volumeMounts:
+            - mountPath: "/mnt/media"
+              name: mediavolume
+          env:
+            - name: DATABASE_TYPE
+              value: "MONGODB"
+#            - name: COSMOSDB_DATABASE
+#              value: "scc24db57449"
+#            - name: COSMOSDB_URL
+#              value: "https://scc2457449.documents.azure.com:443/"
+#            - name: COSMOSDB_KEY
+#              value: "WNgLgfJ6wnS1DX56370BvHdpVqCGsJDtOZx8O2CS889n9yxytp0J3akdTCp9YKCk0JpBlM7pDV9uACDbinHMwg=="
+            - name: MONGODB_CONNECTION_STRING
+              value: "mongodb://mongo:27017"
+            - name: MONGODB_DATABASE
+              value: "scc24db"
+            - name: REDIS_URL
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_SSL
+              value: "FALSE"
+            - name: BLOB_STORAGE_TYPE
+              value: "PERSISTENT_VOLUME_CLAIM"
+            - name: PVC_MOUNT_PATH
+              value: "/mnt/media/"
+#            - name: BlobStoreConnection
+#              value: "DefaultEndpointsProtocol=https;AccountName=sccstwesteurope57449;AccountKey=qkgiOvFhpX1/QRdC0H3hc2dEbcR1xtrRdL6eytbg8V95jtQJAB2SU6Po9l/mQ/W/O22bbtlawwg0+AStjVWFeQ==;EndpointSuffix=core.windows.net"
+            - name: USE_COG_SEARCH
+              value: "FALSE"
+            - name: USE_CACHE
+              value: "TRUE"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1024Mi
+          ports:
+            - containerPort: 8080
+      volumes:
+        - name: mediavolume
+          persistentVolumeClaim:
+            claimName: azure-managed-disk
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: airbnb-backend
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: airbnb-backend

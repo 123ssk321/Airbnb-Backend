@@ -1,26 +1,27 @@
-package scc.storage.cosmosdb;
+package scc.storage.cosmosdb.container;
 
 import com.azure.cosmos.CosmosContainer;
 import com.azure.cosmos.models.*;
-import com.azure.cosmos.util.CosmosPagedIterable;
 import scc.data.dao.HouseDAO;
 import scc.data.dto.DiscountedRental;
 import scc.data.dto.HouseList;
 import scc.data.dto.HouseOwner;
+import scc.storage.HousesStorage;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.logging.Logger;
 
-public class HousesCDB {
+public class HousesContainer implements HousesStorage {
     private final CosmosContainer container;
-    private static final Logger Log = Logger.getLogger(HousesCDB.class.getName());
+    private static final Logger Log = Logger.getLogger(HousesContainer.class.getName());
 
-    public HousesCDB(CosmosContainer container) {
+    public HousesContainer(CosmosContainer container) {
         this.container = container;
     }
 
-    public CosmosItemResponse<HouseDAO> putHouse(HouseDAO house){
-        return container.createItem(house);
+    public HouseDAO putHouse(HouseDAO house){
+        return container.createItem(house).getItem();
     }
 
     public HouseDAO getHouse(String houseId){
@@ -38,21 +39,21 @@ public class HousesCDB {
 
     }
 
-    public CosmosItemResponse<Object> deleteHouseById(String houseId) {
+    public void deleteHouseById(String houseId) {
         PartitionKey key = new PartitionKey(houseId);
-        return container.deleteItem(houseId, key, new CosmosItemRequestOptions());
+        container.deleteItem(houseId, key, new CosmosItemRequestOptions());
     }
 
-    public CosmosItemResponse<Object> deleteHouse(HouseDAO house) {
-        return container.deleteItem(house, new CosmosItemRequestOptions());
+    public void deleteHouse(HouseDAO house) {
+        container.deleteItem(house, new CosmosItemRequestOptions());
     }
 
-    public CosmosItemResponse<HouseDAO> updateHouse(String houseId, CosmosPatchOperations updateOps){
+    public HouseDAO updateHouse(String houseId, CosmosPatchOperations updateOps){
         PartitionKey key = new PartitionKey(houseId);
-        return container.patchItem(houseId, key, updateOps, HouseDAO.class);
+        return container.patchItem(houseId, key, updateOps, HouseDAO.class).getItem();
     }
 
-    public CosmosPagedIterable<HouseList> searchHouses(String location, String startDate, String endDate, int start, int length) {
+    public List<HouseList> searchHouses(String location, String startDate, String endDate, int start, int length) {
         if(startDate == null && endDate == null){
             return container.queryItems(
                     "SELECT DISTINCT houses.id, houses.name, houses.location, houses.photoIds[0] as photoId, p as period " +
@@ -61,7 +62,7 @@ public class HousesCDB {
                             "WHERE houses.location=\"" + location + "\" AND p.available = true " +
                             "OFFSET " + start + " LIMIT " + length,
                     new CosmosQueryRequestOptions(),
-                    HouseList.class);
+                    HouseList.class).stream().toList();
         }
         return container.queryItems(
                 "SELECT DISTINCT houses.id, houses.name, houses.location, houses.photoIds[0] as photoId, p as period " +
@@ -70,10 +71,10 @@ public class HousesCDB {
                         "WHERE houses.location=\"" + location + "\" AND p.available = true AND p.startDate >= \"" + startDate + "\" AND p.endDate <= \"" + endDate + "\" " +
                         "OFFSET " + start + " LIMIT " + length,
                 new CosmosQueryRequestOptions(),
-                HouseList.class);
+                HouseList.class).stream().toList();
     }
 
-    public CosmosPagedIterable<DiscountedRental> getDiscountedHouses(int start, int length) {
+    public List<DiscountedRental> getDiscountedHouses(int start, int length) {
         var now = LocalDate.now();
         var in2Weeks = now.plusWeeks(2);
         Log.info("Getting discounted houses");
@@ -86,16 +87,16 @@ public class HousesCDB {
                             "AND p.startDate >= \"" + now + "\" AND p.startDate <= \"" + in2Weeks + "\") AS availablePeriods " +
                         "OFFSET " + start + " LIMIT " + length,
                 new CosmosQueryRequestOptions(),
-                DiscountedRental.class);
+                DiscountedRental.class).stream().toList();
     }
 
-    public CosmosPagedIterable<HouseOwner> getHousesByOwner(String ownerId, int start, int length) {
+    public List<HouseOwner> getHousesByOwner(String ownerId, int start, int length) {
         return container.queryItems(
                 "SELECT houses.id, houses.name, houses.ownerId, houses.location, houses.photoIds[0] as photoId " +
                         "FROM houses WHERE houses.ownerId=\"" + ownerId + "\" " +
                         "OFFSET " + start + " LIMIT " + length,
                 new CosmosQueryRequestOptions(),
-                HouseOwner.class);
+                HouseOwner.class).stream().toList();
     }
 
 }

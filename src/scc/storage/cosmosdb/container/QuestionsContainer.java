@@ -1,26 +1,26 @@
-package scc.storage.cosmosdb;
+package scc.storage.cosmosdb.container;
 
 import com.azure.cosmos.CosmosContainer;
-import com.azure.cosmos.models.CosmosItemResponse;
 import com.azure.cosmos.models.CosmosPatchOperations;
 import com.azure.cosmos.models.CosmosQueryRequestOptions;
 import com.azure.cosmos.models.PartitionKey;
-import com.azure.cosmos.util.CosmosPagedIterable;
 import scc.data.dao.QuestionDAO;
+import scc.storage.QuestionsStorage;
 
+import java.util.List;
 import java.util.logging.Logger;
 
-public class QuestionsCDB {
+public class QuestionsContainer implements QuestionsStorage {
     private final CosmosContainer container;
 
-    private static final Logger Log = Logger.getLogger(QuestionsCDB.class.getName());
+    private static final Logger Log = Logger.getLogger(QuestionsContainer.class.getName());
 
-    public QuestionsCDB(CosmosContainer container) {
+    public QuestionsContainer(CosmosContainer container) {
         this.container = container;
     }
 
-    public CosmosItemResponse<QuestionDAO> putQuestion(QuestionDAO question) {
-        return container.createItem(question);
+    public QuestionDAO putQuestion(QuestionDAO question) {
+        return container.createItem(question).getItem();
     }
 
     public boolean hasQuestion(String questionId) {
@@ -32,7 +32,7 @@ public class QuestionsCDB {
         container.patchItem(questionId, key, updateOps, QuestionDAO.class);
     }
 
-    public CosmosPagedIterable<QuestionDAO> getHouseQuestions(String houseId, Boolean answered, int start, int length) {
+    public List<QuestionDAO> getHouseQuestions(String houseId, Boolean answered, int start, int length) {
         String query;
         if (answered == null)
             query = "SELECT * FROM questions WHERE questions.houseId=\"" + houseId + "\" "+
@@ -49,7 +49,7 @@ public class QuestionsCDB {
         return container.queryItems(
                 query,
                 new CosmosQueryRequestOptions(),
-                QuestionDAO.class);
+                QuestionDAO.class).stream().toList();
     }
 
     public QuestionDAO getQuestion(String questionId){
