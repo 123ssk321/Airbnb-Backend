@@ -28,7 +28,7 @@ public class QuestionsCollection implements QuestionsStorage {
 
     @Override
     public QuestionDAO getQuestion(String questionId) {
-        return collection.find(eq("id", questionId)).first();
+        return collection.find(eq("_id", questionId), QuestionDAO.class).first();
     }
 
     @Override
@@ -37,7 +37,7 @@ public class QuestionsCollection implements QuestionsStorage {
     }
 
     public void addReply(String questionId, Bson update){
-        collection.updateOne(eq("id", questionId), update);
+        collection.updateOne(eq("_id", questionId), update);
     }
 
     @Override
@@ -48,13 +48,13 @@ public class QuestionsCollection implements QuestionsStorage {
 
     @Override
     public List<QuestionDAO> getHouseQuestions(String houseId, Boolean answered, int start, int length) {
-        FindIterable<QuestionDAO> query = null;
+        FindIterable<QuestionDAO> query;
         if(answered == null){
-            query = collection.find(eq("houseId", houseId));
+            query = collection.find(eq("houseId", houseId), QuestionDAO.class);
         } else if (answered) {
-            query = collection.find(and(eq("houseId", houseId), ne("reply", null)));
+            query = collection.find(and(eq("houseId", houseId), ne("reply", null)), QuestionDAO.class);
         } else {
-            query = collection.find(and(eq("houseId", houseId), type("reply", BsonType.NULL)));
+            query = collection.find(and(eq("houseId", houseId), type("reply", BsonType.NULL)), QuestionDAO.class);
         }
         return query.skip(start).limit(length).into(new ArrayList<>());
     }

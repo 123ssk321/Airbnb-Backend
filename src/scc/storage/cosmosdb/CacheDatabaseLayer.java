@@ -11,6 +11,7 @@ import scc.data.dao.UserDAO;
 import scc.data.dto.*;
 import scc.server.auth.LoginDetails;
 import scc.storage.Database;
+import scc.storage.MediaStorage;
 import scc.utils.Hash;
 import scc.utils.Result;
 
@@ -29,9 +30,8 @@ public class CacheDatabaseLayer extends CosmosDBLayer implements Database {
                               String houseCosmosDBContainerName,
                               String rentalCosmosDBContainerName,
                               String questionCosmosDBContainerName,
-                              BlobContainerClient userBlobContainer,
-                              BlobContainerClient houseBlobContainer) {
-        super(cClient.getDatabase(cosmosdbDatabase), userCosmosDBContainerName, houseCosmosDBContainerName, rentalCosmosDBContainerName, questionCosmosDBContainerName, userBlobContainer, houseBlobContainer);
+                              MediaStorage mediaStorage) {
+        super(cClient.getDatabase(cosmosdbDatabase), userCosmosDBContainerName, houseCosmosDBContainerName, rentalCosmosDBContainerName, questionCosmosDBContainerName, mediaStorage);
         cache = new RedisCache();
     }
 

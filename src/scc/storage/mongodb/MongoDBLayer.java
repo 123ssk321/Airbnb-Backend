@@ -1,5 +1,6 @@
 package scc.storage.mongodb;
 
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import static com.mongodb.client.model.Updates.*;
 
@@ -16,7 +17,7 @@ import scc.data.dto.*;
 import scc.server.auth.LoginDetails;
 import scc.storage.AbstractDatabase;
 import scc.storage.Database;
-import scc.storage.media.PersistentVolumeStorage;
+import scc.storage.MediaStorage;
 import scc.storage.mongodb.collection.HousesCollection;
 import scc.storage.mongodb.collection.QuestionsCollection;
 import scc.storage.mongodb.collection.RentalsCollection;
@@ -42,12 +43,12 @@ public class MongoDBLayer extends AbstractDatabase implements Database {
 
     private final RedisCache cache;
 
-    public MongoDBLayer(MongoDatabase db){
+    public MongoDBLayer(MongoDatabase db, MediaStorage mediaStorage){
         super(new UsersCollection(db.getCollection(USER_MONGODB_COLLECTION_NAME, UserDAO.class)),
                 new HousesCollection(db.getCollection(HOUSE_MONGODB_COLLECTION_NAME, HouseDAO.class)),
                 new RentalsCollection(db.getCollection(RENTAL_MONGODB_COLLECTION_NAME, RentalDAO.class)),
                 new QuestionsCollection(db.getCollection(QUESTION_MONGODB_COLLECTION_NAME, QuestionDAO.class)),
-                new PersistentVolumeStorage());
+                mediaStorage);
         cache = new RedisCache();
     }
 
@@ -149,7 +150,7 @@ public class MongoDBLayer extends AbstractDatabase implements Database {
         if(photoIdToUpdate != null)
             updateOps.add(set("photoId", photoIdToUpdate));
         if(houseIdsToUpdate != null && houseIdsToUpdate.length > 1) {
-            updateOps.add(set("houseIds", houseIdsToUpdate));
+            updateOps.add(set("houseIds", new ArrayList<>(List.of(houseIdsToUpdate))));
         }
         return combine(updateOps);
     }
@@ -244,8 +245,10 @@ public class MongoDBLayer extends AbstractDatabase implements Database {
         if(res.isOK()){
             var tenantId = rental.getTenantId();
             var house = this.getHouseDAO(houseId);
-            var housePeriods = Arrays.asList(house.getPeriods());
-            var periodIdx = housePeriods.indexOf(rental.getPeriod());
+            var housePeriods = house.getPeriods();
+            var rentalPeriod = rental.getPeriod();
+            rentalPeriod.setAvailable(true);
+            var periodIdx = housePeriods.indexOf(rentalPeriod);
 
             ((HousesCollection) houses).updateHouse(houseId, set("periods."+periodIdx+".available", false));
             ((UsersCollection) users).updateUser(tenantId, push("rentalIds", res.value()));

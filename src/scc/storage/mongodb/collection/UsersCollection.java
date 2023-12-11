@@ -10,8 +10,9 @@ import scc.storage.UsersStorage;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.mongodb.client.model.Filters.empty;
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Projections.fields;
+import static com.mongodb.client.model.Projections.include;
 
 public class UsersCollection implements UsersStorage {
     private final MongoCollection<UserDAO> collection;
@@ -29,25 +30,25 @@ public class UsersCollection implements UsersStorage {
 
     @Override
     public UserDAO getUser(String userId) {
-        return collection.find(eq("id", userId)).first();
+        return collection.find(eq("_id", userId)).first();
     }
 
     @Override
     public List<UserDAO> getUsers() {
-        return collection.find(empty()).into(new ArrayList<>());
+        return collection.find(UserDAO.class).into(new ArrayList<>());
     }
 
     public UserDAO updateUser(String userId, Bson updates){
-        return collection.findOneAndUpdate(eq("id", userId), updates, new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
+        return collection.findOneAndUpdate(eq("_id", userId), updates, new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
     }
 
     @Override
     public void delUserById(String id) {
-        collection.deleteOne(eq("id", id));
+        collection.deleteOne(eq("_id", id));
     }
 
     @Override
     public void delUser(UserDAO user) {
-        collection.deleteOne(eq("id", user.getId()));
+        collection.deleteOne(eq("_id", user.getId()));
     }
 }

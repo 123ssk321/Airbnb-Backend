@@ -11,7 +11,6 @@ import scc.server.auth.LoginDetails;
 import scc.server.resources.MediaResource;
 import scc.utils.Result;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -266,7 +265,7 @@ public abstract class AbstractDatabase implements Database {
         if(!authRes.isOK())
             return Result.error(authRes.error());
 
-        var housePeriods = Arrays.asList(house.getPeriods());
+        var housePeriods = house.getPeriods();
         var periodIdx = housePeriods.indexOf(rental.getPeriod());
         if(periodIdx == -1)
             return Result.error(Response.Status.NOT_FOUND);

@@ -3,7 +3,8 @@ package scc.data.dao;
 import scc.data.dto.User;
 import scc.utils.Hash;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents a User, as stored in the database
@@ -15,15 +16,15 @@ public class UserDAO {
 	private String name;
 	private String pwd;
 	private String photoId;
-	private String[] houseIds;
-	private String[] rentalIds;
+	private List<String> houseIds;
+	private List<String> rentalIds;
 
 	public UserDAO() {
 	}
 	public UserDAO(User u) {
-		this(u.getId(), u.getName(), Hash.of(u.getPwd()), u.getPhotoId(), u.getHouseIds(), u.getRentalIds());
+		this(u.getId(), u.getName(), Hash.of(u.getPwd()), u.getPhotoId(), new ArrayList<>(List.of(u.getHouseIds())), new ArrayList<>(List.of(u.getRentalIds())));
 	}
-	public UserDAO(String id, String name, String pwd, String photoId, String[] houseIds, String[] rentalIds) {
+	public UserDAO(String id, String name, String pwd, String photoId, List<String> houseIds, List<String> rentalIds) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -47,6 +48,9 @@ public class UserDAO {
 	public String getId() {
 		return id;
 	}
+	public void setId(String id){
+		this.id = id;
+	}
 	public String getName() {
 		return name;
 	}
@@ -65,31 +69,31 @@ public class UserDAO {
 	public void setPhotoId(String photoId) {
 		this.photoId = photoId;
 	}
-	public String[] getHouseIds() {
-		return houseIds == null ? new String[0] : houseIds ;
+	public List<String> getHouseIds() {
+		return houseIds;
 	}
-	public void setHouseIds(String[] houseIds) {
+	public void setHouseIds(List<String> houseIds) {
 		this.houseIds = houseIds;
 	}
 
-	public String[] getRentalIds() {
+	public List<String> getRentalIds() {
 		return rentalIds;
 	}
 
-	public void setRentalIds(String[] rentalIds) {
+	public void setRentalIds(List<String> rentalIds) {
 		this.rentalIds = rentalIds;
 	}
 
 	public User toUser() {
 		return new User(id, name, pwd, photoId,
-				houseIds == null ? null : Arrays.copyOf(houseIds,houseIds.length),
-				rentalIds == null ? null : Arrays.copyOf(rentalIds,rentalIds.length));
+				houseIds == null ? null : houseIds.toArray(new String[0]),
+				rentalIds == null ? null : rentalIds.toArray(new String[0]));
 	}
 	@Override
 	public String toString() {
-		return "UserDAO [_rid=" + _rid + ", _ts=" + _ts + ", id=" + id + ", name=" + name + ", pwd=" + pwd
-				+ ", photoId=" + photoId + ", houseIds=" + Arrays.toString(houseIds)
-				+ ", rentalIds=" + Arrays.toString(rentalIds) + "]";
+		return "UserDAO [_rid=" + _rid + ", _ts=" + _ts + ", _id=" + id + ", name=" + name + ", pwd=" + pwd
+				+ ", photoId=" + photoId + ", houseIds=" + houseIds
+				+ ", rentalIds=" + rentalIds + "]";
 	}
 
 }

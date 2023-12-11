@@ -2,7 +2,6 @@ package scc.storage.cosmosdb;
 
 import com.azure.cosmos.CosmosDatabase;
 import com.azure.cosmos.models.CosmosPatchOperations;
-import com.azure.storage.blob.BlobContainerClient;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.Response;
 import scc.data.dao.HouseDAO;
@@ -14,14 +13,13 @@ import scc.mgt.CognitiveSearch;
 import scc.server.auth.LoginDetails;
 import scc.storage.AbstractDatabase;
 import scc.storage.Database;
-import scc.storage.media.BlobStorage;
+import scc.storage.MediaStorage;
 import scc.storage.cosmosdb.container.HousesContainer;
 import scc.storage.cosmosdb.container.QuestionsContainer;
 import scc.storage.cosmosdb.container.RentalsContainer;
 import scc.storage.cosmosdb.container.UsersContainer;
 import scc.utils.Result;
 
-import java.util.Arrays;
 import java.util.List;
 
 public abstract class CosmosDBLayer extends AbstractDatabase implements Database {
@@ -33,13 +31,12 @@ public abstract class CosmosDBLayer extends AbstractDatabase implements Database
                             String houseCosmosDBContainerName,
                             String rentalCosmosDBContainerName,
                             String questionCosmosDBContainerName,
-                            BlobContainerClient userBlobContainer,
-                            BlobContainerClient houseBlobContainer){
+                            MediaStorage mediaStorage){
         super(new UsersContainer(db.getContainer(userCosmosDBContainerName)),
                 new HousesContainer(db.getContainer(houseCosmosDBContainerName)),
                 new RentalsContainer(db.getContainer(rentalCosmosDBContainerName)),
                 new QuestionsContainer(db.getContainer(questionCosmosDBContainerName)),
-                new BlobStorage(userBlobContainer, houseBlobContainer));
+                mediaStorage);
 
         if(System.getenv(AzureProperties.USE_COG_SEARCH).equals(AzureProperties.USE_COG_SEARCH_TRUE))
             cognitiveSearch = new CognitiveSearch();
@@ -136,7 +133,7 @@ public abstract class CosmosDBLayer extends AbstractDatabase implements Database
         if(res.isOK()){
             var house = res.value();
             var owner = this.getUser(house.getOwnerId());
-            var ownerHouseIdx = Arrays.asList(owner.getHouseIds()).indexOf(houseId);
+            var ownerHouseIdx = owner.getHouseIds().indexOf(houseId);
             ((UsersContainer) users).updateUser(owner.getId(), CosmosPatchOperations.create().remove("/houseIds/"+ownerHouseIdx));
 
             for(RentalDAO rental : rentals.getRentalsByHouse(houseId, 0, house.getPeriods().length)){
@@ -186,8 +183,10 @@ public abstract class CosmosDBLayer extends AbstractDatabase implements Database
         var res = super.createRental(session, houseId, rental);
         if(res.isOK()){
             var house = this.getHouseDAO(houseId);
-            var housePeriods = Arrays.asList(house.getPeriods());
-            var periodIdx = housePeriods.indexOf(rental.getPeriod());
+            var housePeriods = house.getPeriods();
+            var rentalPeriod = rental.getPeriod();
+            rentalPeriod.setAvailable(true);
+            var periodIdx = housePeriods.indexOf(rentalPeriod);
             ((HousesContainer) houses).updateHouse(houseId, CosmosPatchOperations.create().replace("/periods/"+periodIdx+"/available", false));
             ((UsersContainer) users).updateUser(rental.getTenantId(), CosmosPatchOperations.create().set("/rentalIds/-", res.value()));
         }

@@ -7,6 +7,7 @@ import jakarta.ws.rs.core.Response;
 import scc.data.dao.*;
 import scc.server.auth.LoginDetails;
 import scc.storage.Database;
+import scc.storage.MediaStorage;
 import scc.utils.Result;
 
 
@@ -18,9 +19,8 @@ public class DatabaseLayer extends CosmosDBLayer implements Database {
                          String houseCosmosDBContainerName,
                          String rentalCosmosDBContainerName,
                          String questionCosmosDBContainerName,
-                         BlobContainerClient userBlobContainer,
-                         BlobContainerClient houseBlobContainer){
-        super(cClient.getDatabase(cosmosdbDatabase), userCosmosDBContainerName, houseCosmosDBContainerName, rentalCosmosDBContainerName, questionCosmosDBContainerName, userBlobContainer, houseBlobContainer);
+                         MediaStorage mediaStorage){
+        super(cClient.getDatabase(cosmosdbDatabase), userCosmosDBContainerName, houseCosmosDBContainerName, rentalCosmosDBContainerName, questionCosmosDBContainerName, mediaStorage);
 
     }
 

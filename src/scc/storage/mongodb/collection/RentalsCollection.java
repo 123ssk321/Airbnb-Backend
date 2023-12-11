@@ -27,7 +27,7 @@ public class RentalsCollection implements RentalsStorage {
 
     @Override
     public RentalDAO getRental(String rentalId) {
-        return collection.find(eq("id", rentalId)).first();
+        return collection.find(eq("_id", rentalId), RentalDAO.class).first();
     }
 
     @Override
@@ -37,25 +37,25 @@ public class RentalsCollection implements RentalsStorage {
 
     @Override
     public void deleteRentalById(String rentalId) {
-        collection.deleteOne(eq("id", rentalId));
+        collection.deleteOne(eq("_id", rentalId));
     }
 
     @Override
     public void deleteRental(RentalDAO rental) {
-        collection.deleteOne(eq("id", rental.getId()));
+        collection.deleteOne(eq("_id", rental.getId()));
     }
 
     public RentalDAO updateRental(String rentalId, Bson updates){
-        return collection.findOneAndUpdate(eq("id", rentalId), updates, new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
+        return collection.findOneAndUpdate(eq("_id", rentalId), updates, new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
     }
 
     @Override
     public List<RentalDAO> getRentalsByUser(String userId, int start, int length) {
-        return collection.find(eq("tenantId", userId)).skip(start).limit(length).into(new ArrayList<>());
+        return collection.find(eq("tenantId", userId), RentalDAO.class).skip(start).limit(length).into(new ArrayList<>());
     }
 
     @Override
     public List<RentalDAO> getRentalsByHouse(String houseId, int start, int length) {
-        return collection.find(eq("houseId", houseId)).skip(start).limit(length).into(new ArrayList<>());
+        return collection.find(eq("houseId", houseId), RentalDAO.class).skip(start).limit(length).into(new ArrayList<>());
     }
 }

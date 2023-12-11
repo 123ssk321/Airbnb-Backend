@@ -29,6 +29,26 @@ public class HouseList {
 
     public Period getPeriod() { return period; }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public void setPhotoId(String photoId) {
+        this.photoId = photoId;
+    }
+
+    public void setPeriod(Period period) {
+        this.period = period;
+    }
+
     @Override
     public String toString() {
         return "HouseList [" +

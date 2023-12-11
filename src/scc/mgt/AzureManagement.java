@@ -38,9 +38,9 @@ import com.azure.cosmos.models.UniqueKeyPolicy;
 
 public class AzureManagement {
 	// TODO: These variable allow you to control what is being created
-	static final boolean CREATE_STORAGE = true;
+	static final boolean CREATE_STORAGE = false;
 	static final boolean CREATE_COSMOSDB = true;
-	static final boolean CREATE_REDIS = true;
+	static final boolean CREATE_REDIS = false;
 	static final boolean CREATE_SEARCH = false;
 
 	// TODO: change your suffix and other names if you want
@@ -53,7 +53,7 @@ public class AzureManagement {
 
 	static final String[] BLOB_CONTAINERS = { "users", "houses" };	// TODO: Containers to add to the blob storage
 
-	static final Region[] REGIONS = new Region[] { Region.EUROPE_WEST, Region.EUROPE_NORTH}; // Define the regions to deploy resources here
+	static final Region[] REGIONS = new Region[] { Region.EUROPE_WEST}; // Define the regions to deploy resources here
 	
 	// Name of resoruce group for each region
 	static final String[] AZURE_RG_REGIONS = Arrays.stream(REGIONS)

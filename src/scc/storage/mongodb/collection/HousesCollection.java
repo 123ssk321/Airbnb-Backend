@@ -32,48 +32,48 @@ public class HousesCollection implements HousesStorage {
 
     @Override
     public HouseDAO getHouse(String houseId) {
-        return collection.find(eq("id", houseId)).first();
+        return collection.find(eq("_id", houseId), HouseDAO.class).first();
     }
 
     @Override
     public void deleteHouseById(String houseId) {
-        collection.deleteOne(eq("id", houseId));
+        collection.deleteOne(eq("_id", houseId));
     }
 
     @Override
     public void deleteHouse(HouseDAO house) {
-        collection.deleteOne(eq("id", house.getId()));
+        collection.deleteOne(eq("_id", house.getId()));
     }
 
     public HouseDAO updateHouse(String houseId, Bson updates){
-        return collection.findOneAndUpdate(eq("id", houseId), updates, new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
+        return collection.findOneAndUpdate(eq("_id", houseId), updates, new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
     }
 
     @Override
     public List<HouseList> searchHouses(String location, String startDate, String endDate, int start, int length) {
         if(startDate == null && endDate == null){
-            return collection.find(and(eq("location", location), eq("periods.available", true)))
-                    .projection(fields(include("id", "name", "location"), slice("photoIds", 1), elemMatch("periods"), excludeId()))
-                    .skip(start).limit(length).map(HouseDAO::toHouseList).into(new ArrayList<>());
+            return collection.find(and(eq("location", location), eq("periods.available", true)), HouseList.class)
+                    .projection(fields(include("_id", "name", "location"), slice("photoIds", 1), elemMatch("periods")))
+                    .skip(start).limit(length).into(new ArrayList<>());
         }
-        return collection.find(and(eq("location", location), eq("periods.available", true), gte("periods.startDate", startDate), lte("periods.endDate", endDate)))
-                .projection(fields(include("id", "name", "location"), slice("photoIds", 1), elemMatch("periods"), excludeId()))
-                .skip(start).limit(length).map(HouseDAO::toHouseList).into(new ArrayList<>());
+        return collection.find(and(eq("location", location), eq("periods.available", true), gte("periods.startDate", startDate), lte("periods.endDate", endDate)), HouseList.class)
+                .projection(fields(include("_id", "name", "location"), slice("photoIds", 1), elemMatch("periods")))
+                .skip(start).limit(length).into(new ArrayList<>());
     }
 
     @Override
     public List<DiscountedRental> getDiscountedHouses(int start, int length) {
         var now = LocalDate.now();
         var in2Weeks = now.plusWeeks(2);
-        return collection.find(and(lte("periods.promotionPrice", "periods.price"), eq("periods.available", true), gte("periods.startDate", now), lte("periods.endDate", in2Weeks)))
-                .projection(fields(include("id", "name", "ownerId", "location"), slice("photoIds", 1), elemMatch("periods"), excludeId()))
-                .skip(start).limit(length).map(HouseDAO::toDiscountedRental).into(new ArrayList<>());
+        return collection.find(and(lte("periods.promotionPrice", "periods.price"), eq("periods.available", true), gte("periods.startDate", now), lte("periods.endDate", in2Weeks)), DiscountedRental.class)
+                .projection(fields(include("_id", "name", "ownerId", "location"), slice("photoIds", 1), elemMatch("periods")))
+                .skip(start).limit(length).into(new ArrayList<>());
     }
 
     @Override
     public List<HouseOwner> getHousesByOwner(String ownerId, int start, int length) {
-        return collection.find(eq("ownerId", ownerId))
-                .projection(fields(include("id", "name", "ownerId", "location"), slice("photoIds", 1), excludeId()))
-                .skip(start).limit(length).map(HouseDAO::toHouseOwner).into(new ArrayList<>());
+        return collection.find(eq("ownerId", ownerId), HouseOwner.class)
+                .projection(fields(include("_id", "name", "ownerId", "location"), slice("photoIds", 1)))
+                .skip(start).limit(length).into(new ArrayList<>());
     }
 }

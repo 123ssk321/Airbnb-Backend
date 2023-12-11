@@ -453,7 +453,7 @@ function loadData() {
 	if( fs.existsSync( '/images')) 
 		basefile = '/images/house.'
 	else
-		basefile =  'images/house.'	
+		basefile =  'images/house.'
 	for( i = 1; i <= 50 ; i++) {
 		let img  = fs.readFileSync(basefile + i + '.jpg')
 		images.push( img)

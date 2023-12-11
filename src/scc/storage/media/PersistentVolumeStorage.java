@@ -7,18 +7,32 @@ import scc.storage.MediaStorage;
 import scc.utils.Hash;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.logging.Logger;
 
 public class PersistentVolumeStorage implements MediaStorage {
-    private static final String PERSISTENT_VOLUME_HOUSES = "/mnt/vol/houses";
-    private static final String PERSISTENT_VOLUME_USERS = "/mnt/vol/users";
+    private static final String PERSISTENT_VOLUME_HOUSES = "houses/";
+    private static final String PERSISTENT_VOLUME_USERS = "users/";
 
-    public PersistentVolumeStorage() {
+    private static Logger logger = Logger.getLogger(PersistentVolumeStorage.class.getName());
+
+    private final String mountPath;
+    
+    public PersistentVolumeStorage(String mountPath) {
+        this.mountPath = mountPath;
+        try {
+            Files.createDirectories(Path.of(mountPath+PERSISTENT_VOLUME_USERS));
+            Files.createDirectories(Path.of(mountPath+PERSISTENT_VOLUME_HOUSES));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public boolean exists(String id, MediaResource.BlobType type) {
         return switch (type) {
-            case USER -> new File(PERSISTENT_VOLUME_USERS+id).isFile();
-            case HOUSE -> new File(PERSISTENT_VOLUME_HOUSES+id).isFile();
+            case USER -> new File(mountPath+PERSISTENT_VOLUME_USERS+id).isFile();
+            case HOUSE -> new File(mountPath+PERSISTENT_VOLUME_HOUSES+id).isFile();
         };
     }
 
@@ -26,7 +40,7 @@ public class PersistentVolumeStorage implements MediaStorage {
     public String uploadUserPhoto(byte[] contents) {
         try {
             var filename = "user-"+ Hash.of(contents);
-            uploadPhoto(contents, PERSISTENT_VOLUME_USERS, filename);
+            uploadPhoto(contents, mountPath+PERSISTENT_VOLUME_USERS, filename);
             return filename;
         }
         catch (Exception e) {
@@ -37,8 +51,8 @@ public class PersistentVolumeStorage implements MediaStorage {
     @Override
     public String uploadHousePhoto(byte[] contents) {
         try {
-            var filename = "user-"+ Hash.of(contents);
-            uploadPhoto(contents, PERSISTENT_VOLUME_HOUSES, filename);
+            var filename = "house-"+ Hash.of(contents);
+            uploadPhoto(contents, mountPath+PERSISTENT_VOLUME_HOUSES, filename);
             return filename;
         }
         catch (Exception e) {
@@ -49,7 +63,7 @@ public class PersistentVolumeStorage implements MediaStorage {
     @Override
     public byte[] downloadUserPhoto(String mediaId) {
         try {
-            return downloadPhoto(PERSISTENT_VOLUME_USERS+mediaId);
+            return downloadPhoto(mountPath+PERSISTENT_VOLUME_USERS+mediaId);
         }
         catch (Exception e) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
@@ -59,7 +73,7 @@ public class PersistentVolumeStorage implements MediaStorage {
     @Override
     public byte[] downloadHousePhoto(String mediaId) {
         try {
-            return downloadPhoto(PERSISTENT_VOLUME_HOUSES+mediaId);
+            return downloadPhoto(mountPath+PERSISTENT_VOLUME_HOUSES+mediaId);
         }
         catch (Exception e) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
@@ -68,6 +82,7 @@ public class PersistentVolumeStorage implements MediaStorage {
 
     private void uploadPhoto(byte[] contents, String path, String filename) throws IOException {
         File persistentFile = new File(path+filename);
+        persistentFile.createNewFile();
         FileOutputStream outputStream = new FileOutputStream(persistentFile);
         outputStream.write(contents);
         outputStream.close();

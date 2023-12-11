@@ -9,7 +9,12 @@ import scc.mgt.AzureProperties;
 public class RedisCache {
 	private static JedisPool instance;
 	private final ObjectMapper mapper;
-	public RedisCache(){ mapper = new ObjectMapper();}
+
+	private static final String REDIS_PORT="REDIS_PORT";
+	private static final String REDIS_SSL="REDIS_SSL";
+	private static final String REDIS_SSL_TRUE="TRUE";
+
+	public 	RedisCache(){ mapper = new ObjectMapper();}
 	private synchronized JedisPool getCachePool() {
 		if( instance != null)
 			return instance;
@@ -22,8 +27,8 @@ public class RedisCache {
 		poolConfig.setTestWhileIdle(true);
 		poolConfig.setNumTestsPerEvictionRun(3);
 		poolConfig.setBlockWhenExhausted(true);
-		instance = new JedisPool(poolConfig, System.getenv(AzureProperties.REDISH_HOST_NAME), 6379, 1000,
-				System.getenv(AzureProperties.REDIS_KEY));
+		instance = new JedisPool(poolConfig, System.getenv(AzureProperties.REDISH_HOST_NAME), Integer.parseInt(System.getenv(REDIS_PORT)), 1000,
+				System.getenv(AzureProperties.REDIS_KEY), System.getenv(REDIS_SSL).equals(REDIS_SSL_TRUE)); //AZURE-6380 ssl=true KUBERNETES-6379 ssl=false
 		return instance;
 	}
 
