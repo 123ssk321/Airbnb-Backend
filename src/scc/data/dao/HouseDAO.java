@@ -3,7 +3,6 @@ package scc.data.dao;
 import scc.data.dto.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class HouseDAO {
@@ -107,11 +106,11 @@ public class HouseDAO {
     }
 
     public HouseList toHouseList(){
-        return new HouseList(id, name, location, photoIds.get(0), periods.get(0));
+        return new HouseList(id, name, location, photoIds.get(0), periods);
     }
 
     public DiscountedRental toDiscountedRental(){
-        return new DiscountedRental(id, name, ownerId, location, photoIds.get(0), periods.get(0));
+        return new DiscountedRental(id, name, ownerId, location, photoIds.get(0), periods);
     }
 
     public HouseOwner toHouseOwner(){

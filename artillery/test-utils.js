@@ -291,7 +291,7 @@ function selectPeriod(context, events, done) {
 		context.vars.rentalLst.constructor === Array &&
 		context.vars.rentalLst.length > 0) {
 		let house = context.vars.rentalLst.sample()
-		let period = house.period
+		let period = house.periods.sample()
 
 		if(period.available){
 			let strRental = `{"id": null,

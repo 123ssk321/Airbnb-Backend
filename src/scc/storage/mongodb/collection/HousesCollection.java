@@ -4,6 +4,7 @@ package scc.storage.mongodb.collection;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReturnDocument;
+import org.bson.Document;
 import org.bson.conversions.Bson;
 import scc.data.dao.HouseDAO;
 import scc.data.dto.DiscountedRental;
@@ -52,22 +53,20 @@ public class HousesCollection implements HousesStorage {
     @Override
     public List<HouseList> searchHouses(String location, String startDate, String endDate, int start, int length) {
         if(startDate == null && endDate == null){
-            return collection.find(and(eq("location", location), eq("periods.available", true)), HouseList.class)
-                    .projection(fields(include("_id", "name", "location"), slice("photoIds", 1), elemMatch("periods")))
-                    .skip(start).limit(length).into(new ArrayList<>());
+            return collection.find(and(eq("location", location), eq("periods.available", true)))
+                    .skip(start).limit(length).map(HouseDAO::toHouseList).into(new ArrayList<>());
         }
-        return collection.find(and(eq("location", location), eq("periods.available", true), gte("periods.startDate", startDate), lte("periods.endDate", endDate)), HouseList.class)
-                .projection(fields(include("_id", "name", "location"), slice("photoIds", 1), elemMatch("periods")))
-                .skip(start).limit(length).into(new ArrayList<>());
+        return collection.find(and(eq("location", location), eq("periods.available", true), gte("periods.startDate", startDate), lte("periods.endDate", endDate)))
+                .skip(start).limit(length).map(HouseDAO::toHouseList).into(new ArrayList<>());
     }
 
     @Override
     public List<DiscountedRental> getDiscountedHouses(int start, int length) {
         var now = LocalDate.now();
         var in2Weeks = now.plusWeeks(2);
-        return collection.find(and(lte("periods.promotionPrice", "periods.price"), eq("periods.available", true), gte("periods.startDate", now), lte("periods.endDate", in2Weeks)), DiscountedRental.class)
-                .projection(fields(include("_id", "name", "ownerId", "location"), slice("photoIds", 1), elemMatch("periods")))
-                .skip(start).limit(length).into(new ArrayList<>());
+        var filter = "{ $expr: { $lte: [ \"$periods.promotionPrice\" , \"$periods.price\" ] }, 'periods.available':{$eq: true}, 'periods.startDate':{$gte: \"" + now + "\" }, 'periods.endDate':{$lte: \"" + in2Weeks + "\" } }";
+        return collection.find(Document.parse(filter))
+                .skip(start).limit(length).map(HouseDAO::toDiscountedRental).into(new ArrayList<>());
     }
 
     @Override
