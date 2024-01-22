@@ -144,12 +144,6 @@ spec:
           env:
             - name: DATABASE_TYPE
               value: "MONGODB"
-#            - name: COSMOSDB_DATABASE
-#              value: "scc24db57449"
-#            - name: COSMOSDB_URL
-#              value: "https://scc2457449.documents.azure.com:443/"
-#            - name: COSMOSDB_KEY
-#              value: "WNgLgfJ6wnS1DX56370BvHdpVqCGsJDtOZx8O2CS889n9yxytp0J3akdTCp9YKCk0JpBlM7pDV9uACDbinHMwg=="
             - name: MONGODB_CONNECTION_STRING
               value: "mongodb://mongo:27017"
             - name: MONGODB_DATABASE
@@ -164,8 +158,6 @@ spec:
               value: "PERSISTENT_VOLUME_CLAIM"
             - name: PVC_MOUNT_PATH
               value: "/mnt/media/"
-#            - name: BlobStoreConnection
-#              value: "DefaultEndpointsProtocol=https;AccountName=sccstwesteurope57449;AccountKey=qkgiOvFhpX1/QRdC0H3hc2dEbcR1xtrRdL6eytbg8V95jtQJAB2SU6Po9l/mQ/W/O22bbtlawwg0+AStjVWFeQ==;EndpointSuffix=core.windows.net"
             - name: USE_COG_SEARCH
               value: "FALSE"
             - name: USE_CACHE
